@@ -135,7 +135,7 @@ g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px va
 </div>
 <script>
 // Step through the page: everything with data-step="n" (SVG groups, list items, table rows).
-// Earlier steps fade, the current one is highlighted, later ones hide. "All" shows everything.
+// The page opens on "All". ‹ › step through: earlier steps fade, the current one glows, later ones hide.
 // Without JavaScript, or when printed with "All", the page shows every step at once.
 (() => {
   const els = [...document.querySelectorAll('[data-step]')];
@@ -149,7 +149,7 @@ g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px va
     '<button type="button" data-s="all" aria-pressed="false">All</button>';
   document.querySelector('header').after(bar);
   const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
-  let n = 1;
+  let n = 0;  // start on "All"; ‹ › step through from there
   const show = () => {
     els.forEach(e => {
       const s = +e.dataset.step;
