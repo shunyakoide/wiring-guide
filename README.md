@@ -23,6 +23,17 @@ Talk about your build as usual ("where does the LED's resistor go?", "check my e
 
 Pages are published with Claude's Artifact tool when it is available; otherwise they are written as local HTML files.
 
+## Acknowledgements
+
+Some checks in the skill were adapted from other MIT-licensed skills. The text was rewritten, not copied, and the board facts were checked against the datasheets linked in each `boards/` file.
+
+- [embedded-engineering-skills](https://github.com/wedsamuel1230/embedded-engineering-skills) by Samuel F. (MIT, © 2026 Samuel F.)
+  - [circuit-debugger](https://github.com/wedsamuel1230/embedded-engineering-skills/tree/main/skills/circuit-debugger): measuring order (power off, then on), expected voltages, common breadboard mistakes, the idea of a test sketch after wiring
+  - [wiring-safety-check](https://github.com/wedsamuel1230/embedded-engineering-skills/tree/main/skills/wiring-safety-check): checking the circuit before drawing it
+  - [board-support](https://github.com/wedsamuel1230/embedded-engineering-skills/tree/main/skills/board-support): per-board pin notes with a source for each fact
+  - [embedded-project-loop](https://github.com/wedsamuel1230/embedded-engineering-skills/tree/main/skills/embedded-project-loop): one step at a time, with the expected result
+- [legacy-circuit-mockups](https://github.com/github/awesome-copilot/tree/main/skills/legacy-circuit-mockups) in github/awesome-copilot (MIT, © GitHub, Inc.): split power rails, signal wire colors
+
 ## License
 
 [MIT](LICENSE)

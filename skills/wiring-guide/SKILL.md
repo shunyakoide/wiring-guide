@@ -15,7 +15,7 @@ Write the page and the progress notes in the user's language.
 1. **Confirm where things really are.** When checking existing wiring, never treat a plan (soldering plan, schematic, pinout table) as what was actually built; if the real position is not written anywhere, ask before drawing. When the user asks where to put things, choose the positions yourself. If the layout uses the power rails, ask whether they are split in the middle and which side is + (the red and blue lines printed on the board). For a value the user did not give (LED color, supply voltage), assume the common one, say so on the page, and give the numbers for the other cases too.
 2. **Pick the page.** If the project has a page that is rewritten for each check, update it in place; read its current version first. Otherwise make a new page.
 3. **Copy [template.html](template.html)** and replace only the content (eyebrow, title, lead, sections). Keep the colors, fonts and dark mode as they are.
-4. **Check the circuit before drawing it.** Put anything that can damage a part or the meter in a `.note`, and nothing else: a 5 V signal into a 3.3 V pin, an LED without a current-limiting resistor (R = (Vsupply − Vf) / I; aim for 5–10 mA), a motor or relay coil without a flyback diode, an output that switches something on at power-up. Pin restrictions of the board (input-only, boot strapping, flash pins) go here too; take them from the board's datasheet, not from memory.
+4. **Check the circuit before drawing it.** Put anything that can damage a part or the meter in a `.note`, and nothing else: a 5 V signal into a 3.3 V pin, an LED without a current-limiting resistor (R = (Vsupply − Vf) / I; aim for 5–10 mA), a motor or relay coil without a flyback diode, an output that switches something on at power-up. Pin restrictions of the board (input-only, boot strapping, flash pins) go here too. Read the board's file in [boards/](boards/) when there is one (Arduino Uno/Nano/Mega, ESP32, Raspberry Pi Pico) and check the source it links; for other boards, use the datasheet, not memory.
 5. **Draw the figure as inline SVG** (see "Drawing rules").
 6. **Look at it before handing it over.** Render the page at desktop and phone width, in light and dark, and fix overlapping labels. Headless screenshots can clip narrow pages; measure in a real browser before changing the layout.
 7. **Publish and open it.** With the Artifact tool: publish (same `url` for a page that is rewritten), then `open` it. Without it: write the HTML into the project's scratch area and open it in a browser.
@@ -46,6 +46,15 @@ Put the steps in this order in an `<ol>`, and give each reading an expected valu
 3. Typical expected values: USB 5 V rail 4.75–5.25 V, 3.3 V rail 3.2–3.4 V, LED forward voltage red 1.8–2.2 V, white or blue 3.0–3.4 V. A diode reads as a voltage (about 0.6 V for silicon) in diode mode; most meters do not beep on it.
 
 Measure resistance with the part out of the circuit when you can; parallel paths on the board change the reading.
+
+## Trying it
+
+End a wiring page with one sketch to run and what it should show, so the user can tell the wiring works:
+
+- An LED: the IDE's built-in Blink (File → Examples → 01.Basics → Blink), with the pin changed if it is not the on-board LED's. Expected: on and off once a second.
+- An I2C part: [sketches/i2c_scan/i2c_scan.ino](sketches/i2c_scan/i2c_scan.ino). Expected: the address from the part's datasheet (an SSD1306 OLED is usually 0x3C). "no I2C device" means check SDA/SCL, power, GND and pull-ups.
+
+Do not hand out a sketch that drives pins as outputs unless the page shows nothing else is wired to them.
 
 ## Progress notes
 

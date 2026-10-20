@@ -7,7 +7,10 @@ A Claude Code plugin with one skill: `skills/wiring-guide/`.
 - `skills/wiring-guide/SKILL.md`: the instructions Claude follows. Keep it generic: no personal paths, URLs, board placements or meter models.
 - `skills/wiring-guide/template.html`: page styles (light and dark). `render_index.py` reuses it.
 - `skills/wiring-guide/render_index.py`: progress Markdown to index HTML. Python 3 standard library only.
+- `skills/wiring-guide/boards/`: pin notes per board. Every fact needs a source link (datasheet or official docs).
+- `skills/wiring-guide/sketches/`: small Arduino sketches to try after wiring. Arduino core libraries only.
 - `examples/progress.md`: sample progress file.
+- README Acknowledgements: credit any idea taken from another project there, in both READMEs.
 
 ## Check
 ```
