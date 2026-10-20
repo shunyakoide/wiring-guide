@@ -63,6 +63,16 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
 .zoom button:hover { border-color: var(--muted); }
 .zoom button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
 .zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; }
+.stepper { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 0; background: var(--bg); }
+.stepper button { font: 500 14px/1 var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 40px; height: 36px; padding: 0 12px; cursor: pointer; }
+.stepper button:disabled { opacity: .4; cursor: default; }
+.stepper button[aria-pressed="true"] { border-color: var(--hl); color: var(--hl); }
+.stepper button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
+.stepper .pos { font: 500 14px var(--font-mono); min-width: 6ch; text-align: center; }
+[data-step].past { opacity: .35; }
+[data-step].later { display: none; }
+li[data-step].now, tr[data-step].now td { background: var(--hl-soft); }
+li[data-step].now { border-radius: 4px; }
 </style>
 </head><body>
 <div class="wrap">
@@ -85,16 +95,26 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
           <text x="44" y="94">j</text><text x="44" y="114">i</text><text x="44" y="134">h</text><text x="44" y="154">g</text><text x="44" y="174">f</text>
         </g>
         <!-- Place holes with <circle r="3" fill="var(--hole)"/> where needed, or use a <pattern> -->
+        <!-- One <g data-step="n"> per step. Steps before the current one fade, later ones hide. -->
         <!-- Wire 1: 3j to top + rail at 3 -->
-        <path d="M100 90 V58" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="100" cy="90" r="5" fill="var(--hl)"/><circle cx="100" cy="58" r="5" fill="var(--hl)"/>
-        <text x="110" y="80" class="hl">1</text>
+        <g data-step="1">
+          <path d="M100 90 V58" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="100" cy="90" r="5" fill="var(--hl)"/><circle cx="100" cy="58" r="5" fill="var(--hl)"/>
+          <text x="110" y="80" class="hl">1</text>
+        </g>
+        <!-- Wire 2: 5j to top − rail at 5 -->
+        <g data-step="2">
+          <path d="M140 90 V38" stroke="var(--blk)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="140" cy="90" r="5" fill="var(--hl)"/><circle cx="140" cy="38" r="5" fill="var(--hl)"/>
+          <text x="150" y="80" class="hl">2</text>
+        </g>
         <!-- Row numbers (1 on the left) -->
         <g class="m" text-anchor="middle"><text x="60" y="270">1</text><text x="100" y="270">3</text><text x="140" y="270">5</text></g>
       </svg>
     </div>
     <ol>
-      <li>A step. <b>Bold the part that matters.</b></li>
+      <li data-step="1">A step. <b>Bold the part that matters.</b></li>
+      <li data-step="2">The next step.</li>
     </ol>
   </section>
 
@@ -104,7 +124,8 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
       <table class="tbl">
         <thead><tr><th>Wire</th><th>From</th><th>To</th><th>Jumper</th></tr></thead>
         <tbody>
-          <tr class="on"><td><span class="step">1</span>3V3</td><td class="v">3j</td><td class="v">top + (inner) 3</td><td class="v">short</td></tr>
+          <tr data-step="1"><td><span class="step">1</span>3V3</td><td class="v">3j</td><td class="v">top + (inner) 3</td><td class="v">short</td></tr>
+          <tr data-step="2"><td><span class="step">2</span>GND</td><td class="v">5j</td><td class="v">top − (outer) 5</td><td class="v">short</td></tr>
         </tbody>
       </table>
     </div>
@@ -112,6 +133,49 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
   </section>
 </div>
 <script>
+// Step through the page: everything with data-step="n" (SVG groups, list items, table rows).
+// Earlier steps fade, the current one is highlighted, later ones hide. "All" shows everything.
+// Without JavaScript, or when printed with "All", the page shows every step at once.
+(() => {
+  const els = [...document.querySelectorAll('[data-step]')];
+  const last = Math.max(0, ...els.map(e => +e.dataset.step));
+  if (last < 2) return;
+  const bar = document.createElement('div');
+  bar.className = 'stepper';
+  bar.innerHTML = '<button type="button" data-s="prev" aria-label="Previous step">‹</button>' +
+    '<span class="pos" aria-live="polite"></span>' +
+    '<button type="button" data-s="next" aria-label="Next step">›</button>' +
+    '<button type="button" data-s="all" aria-pressed="false">All</button>';
+  document.querySelector('header').after(bar);
+  const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
+  let n = 1;
+  const show = () => {
+    els.forEach(e => {
+      const s = +e.dataset.step;
+      e.classList.toggle('past', n > 0 && s < n);
+      e.classList.toggle('now', n > 0 && s === n);
+      e.classList.toggle('later', n > 0 && s > n);
+    });
+    pos.textContent = n ? n + ' / ' + last : '1–' + last;
+    bar.querySelector('[data-s="prev"]').disabled = n === 1;
+    bar.querySelector('[data-s="next"]').disabled = n === last;
+    all.setAttribute('aria-pressed', n === 0);
+  };
+  const go = d => { n = n === 0 ? (d > 0 ? 1 : last) : Math.min(last, Math.max(1, n + d)); show(); };
+  bar.addEventListener('click', e => {
+    const s = e.target.closest('button')?.dataset.s;
+    if (s === 'prev') go(-1);
+    else if (s === 'next') go(1);
+    else if (s === 'all') { n = n === 0 ? 1 : 0; show(); }
+  });
+  addEventListener('keydown', e => {
+    if (e.target.closest?.('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight') go(1);
+    else if (e.key === 'ArrowLeft') go(-1);
+  });
+  show();
+})();
+
 // Zoom for each figure: buttons, and Ctrl/⌘ + wheel or trackpad pinch over the drawing.
 // "Fit" shows the whole drawing in the page width; 100% is the viewBox size, where text is 12px.
 document.querySelectorAll('.figure').forEach(fig => {
