@@ -15,7 +15,7 @@ python3 skills/wiring-guide/render_index.py examples/progress.md /tmp/index.html
 ```
 
 ## Rules
-- English in SKILL.md, README.md and code. Japanese only in README.ja.md.
+- English in SKILL.md, README.md and code, except Japanese trigger phrases in the description. Japanese prose only in README.ja.md.
 - Do not add dependencies.
 
 計画・調査メモはこのリポジトリに置かない(作者の手元の別リポジトリで管理している)。
