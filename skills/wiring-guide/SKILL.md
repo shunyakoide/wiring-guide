@@ -42,7 +42,7 @@ Write the page and the progress notes in the user's language.
 - Steps go in `<ol>`, wires and parts in one `.tbl` table. Number wires 1, 2, … and name parts R1, LED1, …, the same in the table and the drawing.
 - Keep the labels that matter in the left part of the figure as drawn: on a phone the SVG scrolls sideways and the right side starts hidden.
 - Draw black wires with `--w-blk` over a slightly wider `--w-edge` stroke, so they still read as black in dark mode. Wire tokens do not change with the theme; `--blk` does, so do not use it for wires.
-- Set the SVG's `min-width` to its viewBox width, so 12px text stays 12px; narrow screens scroll it sideways. No text under 12px. A long board that does not fit may be drawn in part (see above).
+- Set the SVG's `min-width` to its viewBox width, so 12px text stays 12px; narrow screens scroll it sideways. Keep the template's zoom script: it adds −, Fit, 100%, + buttons above each figure, and Ctrl/⌘ + wheel or a pinch zooms. Translate the "Fit" label and the two `aria-label`s into the user's language. No text under 12px. A long board that does not fit may be drawn in part (see above).
 
 ## Measuring
 

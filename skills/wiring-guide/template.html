@@ -58,6 +58,11 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
 .tbl td:first-child, .tbl th { white-space: nowrap; }
 .tbl td.v { font-family: var(--font-mono); white-space: nowrap; color: var(--muted); }
 .tbl tr.on td { background: var(--hl-soft); }
+.zoom { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+.zoom button { font: 500 13px/1 var(--font-mono); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 36px; height: 32px; padding: 0 10px; cursor: pointer; }
+.zoom button:hover { border-color: var(--muted); }
+.zoom button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
+.zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; }
 </style>
 </head><body>
 <div class="wrap">
@@ -106,4 +111,46 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
     <p class="note">Warn about irreversible steps and easy ways to break something here.</p>
   </section>
 </div>
+<script>
+// Zoom for each figure: buttons, and Ctrl/⌘ + wheel or trackpad pinch over the drawing.
+// "Fit" shows the whole drawing in the page width; 100% is the viewBox size, where text is 12px.
+document.querySelectorAll('.figure').forEach(fig => {
+  const svg = fig.querySelector('svg');
+  const w = svg && svg.viewBox.baseVal && svg.viewBox.baseVal.width;
+  if (!w) return;
+  const bar = document.createElement('div');
+  bar.className = 'zoom';
+  bar.innerHTML = '<span class="lv"></span>' +
+    '<button type="button" data-z="out" aria-label="Zoom out">−</button>' +
+    '<button type="button" data-z="fit">Fit</button>' +
+    '<button type="button" data-z="1">100%</button>' +
+    '<button type="button" data-z="in" aria-label="Zoom in">＋</button>';
+  fig.before(bar);
+  const lv = bar.querySelector('.lv');
+  const scale = () => svg.getBoundingClientRect().width / w;
+  const show = () => { lv.textContent = Math.round(scale() * 100) + '%'; };
+  const set = z => {
+    const cx = (fig.scrollLeft + fig.clientWidth / 2) / svg.getBoundingClientRect().width;
+    svg.style.maxWidth = 'none';
+    svg.style.minWidth = '0';
+    svg.style.width = z === 'fit' ? '100%' : Math.min(4, Math.max(0.25, z)) * w + 'px';
+    fig.scrollLeft = cx * svg.getBoundingClientRect().width - fig.clientWidth / 2;
+    show();
+  };
+  bar.addEventListener('click', e => {
+    const z = e.target.closest('button')?.dataset.z;
+    if (z === 'in') set(scale() * 1.25);
+    else if (z === 'out') set(scale() / 1.25);
+    else if (z === 'fit') set('fit');
+    else if (z) set(1);
+  });
+  fig.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;  // a trackpad pinch arrives as a wheel event with ctrlKey
+    e.preventDefault();
+    set(scale() * Math.exp(-e.deltaY * 0.01));
+  }, { passive: false });
+  addEventListener('resize', show);
+  show();
+});
+</script>
 </body></html>
