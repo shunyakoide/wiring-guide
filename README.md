@@ -7,7 +7,7 @@ A Claude Code skill for hardware builds. When you ask where a wire goes, which h
 ## Install
 
 ```
-/plugin marketplace add shunyagithub/wiring-guide
+/plugin marketplace add shunyakoide/wiring-guide
 /plugin install wiring-guide@wiring-guide
 ```
 

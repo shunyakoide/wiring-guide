@@ -7,7 +7,7 @@
 ## 入れ方
 
 ```
-/plugin marketplace add shunyagithub/wiring-guide
+/plugin marketplace add shunyakoide/wiring-guide
 /plugin install wiring-guide@wiring-guide
 ```
 
