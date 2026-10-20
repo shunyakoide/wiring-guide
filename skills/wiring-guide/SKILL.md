@@ -12,7 +12,12 @@ Write the page and the progress notes in the user's language.
 ## Steps
 
 0. **Read the progress notes.** Look for the project's progress file (see "Progress notes"). It says what is done and which pages exist. If there is none, make one; when the Artifact tool is available, collect the existing pages with `Artifact` `list`.
-1. **Confirm where things really are.** When checking existing wiring, never treat a plan (soldering plan, schematic, pinout table) as what was actually built; if the real position is not written anywhere, ask before drawing. When the user asks where to put things, choose the positions yourself. If the layout uses the power rails, ask whether they are split in the middle and which side is + (the red and blue lines printed on the board). For a value the user did not give (LED color, supply voltage), assume the common one, say so on the page, and give the numbers for the other cases too.
+1. **Confirm where things really are.** When checking existing wiring, never treat a plan (soldering plan, schematic, pinout table) as what was actually built; if the real position is not written anywhere, ask before drawing. When the user asks where to put things, choose the positions yourself. Breadboards differ, so before the first drawing ask about the user's board (or read it from the project's memory) and record the answers there:
+   - Size: rows per side (mini 17, half 30, full 63 are common) and whether it has power rails at all. Every hole you name must exist on that board.
+   - Labels: which end row 1 is at, and which side column a is on. Some boards print them the other way round.
+   - Holes per strip (5 on most boards; count them if the board looks different) and whether the rails are split in the middle.
+   - Which rail is + (the red line) and which is − (the blue line), on each side.
+   For a value the user did not give (LED color, supply voltage), assume the common one, say so on the page, and give the numbers for the other cases too.
 2. **Pick the page.** If the project has a page that is rewritten for each check, update it in place; read its current version first. Otherwise make a new page.
 3. **Copy [template.html](template.html)** and replace only the content (eyebrow, title, lead, sections). Keep the colors, fonts and dark mode as they are.
 4. **Check the circuit before drawing it.** Put anything that can damage a part or the meter in a `.note`, and nothing else: a 5 V signal into a 3.3 V pin, an LED without a current-limiting resistor (R = (Vsupply − Vf) / I; aim for 5–10 mA), a motor or relay coil without a flyback diode, an output that switches something on at power-up. Pin restrictions of the board (input-only, boot strapping, flash pins) go here too. Read the board's file in [boards/](boards/) when there is one (Arduino Uno/Nano/Mega, ESP32, Raspberry Pi Pico) and check the source it links; for other boards, use the datasheet, not memory.
@@ -27,7 +32,7 @@ Write the page and the progress notes in the user's language.
 - Draw **only what to check now**. Highlight the wires and parts to check with `--hl`; keep the rest faint.
 - Show **both ends** of every wire: which board, which hole, inner or outer rail, + or −.
 - Draw the other boards (Arduino, Pico, a module) as a simple outline with only the pins used labelled, rotated so the headers face the breadboard. Say on the drawing which way it is rotated.
-- Draw the breadboard **the way the user has it placed** (ask once, then record it in the project's memory). Label row numbers and column letters on the edges.
+- Draw the breadboard **the way the user has it placed and at its real size** (ask once, then record it in the project's memory): the same number of rows, the rails it has, and its own numbering. If the drawing shows only part of the board, say which rows it shows. Label row numbers and column letters on the edges.
 - Name pins in a way a person can count by hand ("3rd pin from the USB end"), not coordinates alone.
 - For a multimeter, draw which jacks the leads go in, the dial position, and where the red and black probes touch. Use the user's meter model if known.
 - **Mark the usual mistakes on the drawing** where they apply, with `--hl` on the holes concerned: both legs of a part in the same 5-hole strip, a rail that is split in the middle, LED orientation (long leg = +, flat edge = −), I2C without pull-ups, an input pin left floating.
