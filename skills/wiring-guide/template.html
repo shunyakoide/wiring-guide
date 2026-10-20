@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head>
+<html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Wiring check</title>
@@ -44,7 +44,7 @@ p { margin: 0; max-width: 65ch; }
 .lead { color: var(--muted); }
 section { display: grid; gap: 12px; min-width: 0; }
 .figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
-.figure svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 720px; min-width: 720px; } /* = viewBox width, so text keeps its size */
+.figure svg { display: block; width: 100%; height: auto; margin: 0 auto; } /* the script pins it to the viewBox width, so text keeps its size */
 svg text { font-family: var(--font-body); fill: var(--fg); font-size: 13px; }
 svg .m { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
 svg .hl { font-weight: 700; fill: var(--hl); }
@@ -63,6 +63,7 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
 .zoom button:hover { border-color: var(--muted); }
 .zoom button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
 .zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; }
+pre { margin: 0; font: 13px/1.6 var(--font-mono); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
 .stepper { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 0; background: var(--bg); }
 .stepper button { font: 500 14px/1 var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 40px; height: 36px; padding: 0 12px; cursor: pointer; }
 .stepper button:disabled { opacity: .4; cursor: default; }
@@ -105,7 +106,8 @@ g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px va
         </g>
         <!-- Wire 2: 5j to top − rail at 5 -->
         <g data-step="2">
-          <path d="M140 90 V38" stroke="var(--blk)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M140 90 V38" stroke="var(--w-edge)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M140 90 V38" stroke="var(--w-blk)" stroke-width="4" stroke-linecap="round"/>
           <circle cx="140" cy="90" r="5" fill="var(--hl)"/><circle cx="140" cy="38" r="5" fill="var(--hl)"/>
           <text x="150" y="80" class="hl">2</text>
         </g>
@@ -134,6 +136,9 @@ g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px va
   </section>
 </div>
 <script>
+// Button labels: translate these into the page's language.
+const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', zoomIn: 'Zoom in', zoomOut: 'Zoom out' };
+
 // Step through the page: everything with data-step="n" (SVG groups, list items, table rows).
 // The page opens on "All". ‹ › step through: earlier steps fade, the current one glows, later ones hide.
 // Without JavaScript, or when printed with "All", the page shows every step at once.
@@ -143,10 +148,10 @@ g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px va
   if (last < 2) return;
   const bar = document.createElement('div');
   bar.className = 'stepper';
-  bar.innerHTML = '<button type="button" data-s="prev" aria-label="Previous step">‹</button>' +
+  bar.innerHTML = '<button type="button" data-s="prev" aria-label="' + UI.prev + '">‹</button>' +
     '<span class="pos" aria-live="polite"></span>' +
-    '<button type="button" data-s="next" aria-label="Next step">›</button>' +
-    '<button type="button" data-s="all" aria-pressed="false">All</button>';
+    '<button type="button" data-s="next" aria-label="' + UI.next + '">›</button>' +
+    '<button type="button" data-s="all" aria-pressed="false">' + UI.all + '</button>';
   document.querySelector('header').after(bar);
   const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
   let n = 0;  // start on "All"; ‹ › step through from there
@@ -183,13 +188,14 @@ document.querySelectorAll('.figure').forEach(fig => {
   const svg = fig.querySelector('svg');
   const w = svg && svg.viewBox.baseVal && svg.viewBox.baseVal.width;
   if (!w) return;
+  svg.style.minWidth = svg.style.maxWidth = w + 'px';
   const bar = document.createElement('div');
   bar.className = 'zoom';
   bar.innerHTML = '<span class="lv"></span>' +
-    '<button type="button" data-z="out" aria-label="Zoom out">−</button>' +
-    '<button type="button" data-z="fit">Fit</button>' +
+    '<button type="button" data-z="out" aria-label="' + UI.zoomOut + '">−</button>' +
+    '<button type="button" data-z="fit">' + UI.fit + '</button>' +
     '<button type="button" data-z="1">100%</button>' +
-    '<button type="button" data-z="in" aria-label="Zoom in">＋</button>';
+    '<button type="button" data-z="in" aria-label="' + UI.zoomIn + '">＋</button>';
   fig.before(bar);
   const lv = bar.querySelector('.lv');
   const scale = () => svg.getBoundingClientRect().width / w;
