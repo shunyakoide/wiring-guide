@@ -2,9 +2,13 @@
 
 [English](README.md)
 
-電子工作のための Claude Code の skill です。「この線はどこへ」「どの穴に挿す」「どこをハンダ付けする」「テスターでどこを測る」と聞くと、穴の番号を並べた文章ではなく、絵の入ったページで答えます。作ったページの一覧と、どこまで進んだかを目次のページにまとめます。
+電子工作のための AI の skill です（Claude Code の plugin としても入れられます）。「この線はどこへ」「どの穴に挿す」「どこをハンダ付けする」「テスターでどこを測る」と聞くと、穴の番号を並べた文章ではなく、絵の入ったページで答えます。作ったページの一覧と、どこまで進んだかを目次のページにまとめます。
 
 ## 入れ方
+
+中身は [Agent Skills](https://agentskills.io) の形のフォルダ（`skills/wiring-guide/`：`SKILL.md` と、それが使うファイル）なので、`SKILL.md` を読める AI ならどれでも使えます。
+
+**Claude Code**
 
 ```
 /plugin marketplace add shunyakoide/wiring-guide
@@ -12,6 +16,12 @@
 ```
 
 または `skills/wiring-guide/` を `~/.claude/skills/` にコピーします。
+
+**Claude のアプリ（claude.ai・デスクトップ）**：`skills/wiring-guide/` フォルダを zip にして、設定 → 機能 → Skills からアップロードします。`render_index.py` を動かすため、コード実行を有効にしてください。
+
+**Claude API・Agent SDK**：`skills/wiring-guide/` をカスタムの skill として読み込みます。
+
+**ほかの AI**（GitHub Copilot・Codex・Cursor など Agent Skills に対応したもの）：そのツールの skills のフォルダに `skills/wiring-guide/` をコピーします。場所は各ツールの説明を見てください。今のところ試したのは Claude Code だけです。
 
 ## 使い方
 
@@ -21,7 +31,7 @@
 - 進み具合はリポジトリの外の Markdown 1 つに書きます（既定は `~/.wiring-guide/<repo>/progress.md`）。見本は [examples/progress.md](examples/progress.md)。見出しは日本語でも構いません。
 - `render_index.py` がその Markdown から目次のページを作ります。Python 3 だけで動きます。
 
-Artifact の機能があるときはアーティファクトで出し、無いときはローカルの HTML に書きます。
+Claude の Artifact の機能があるときはアーティファクトで出します。無いときはローカルの HTML に書いてブラウザで開くので、ファイルを書ける AI ならどれでも動きます。
 
 ## 参考にしたもの
 

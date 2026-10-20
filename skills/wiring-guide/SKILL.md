@@ -34,7 +34,7 @@ Write the page and the progress notes in the user's language.
 - **On a step that adds to earlier ones**, show what is already on the board so the user can find their place: draw it faint (about 40% opacity) at the holes recorded in the progress notes, with both ends of every wire, and never move it. Draw this step's parts and wires at full strength, ring their holes with `--hl`, and highlight their row numbers. In the table, list this step's rows first, then the earlier ones faint, marked as already in.
 - Show **both ends** of every wire: which board, which hole, inner or outer rail, + or −.
 - Draw the other boards (Arduino, Pico, a module) as a simple outline with only the pins used labelled, rotated so the header with the most used pins faces the breadboard. Say on the drawing which way it is rotated. They need not be to scale, but their pins must stay countable.
-- Draw the breadboard **the way the user has it placed and at its real size** (ask once, then record it in the project's memory): the same number of rows, the rails it has, and its own numbering. If the drawing shows only part of the board, say which rows it shows. Label row numbers and column letters on the edges.
+- Draw the breadboard **the way the user has it placed and at its real size** (ask once, then record it where you keep notes for this project: your memory, or the project's instructions file such as CLAUDE.md or AGENTS.md): the same number of rows, the rails it has, and its own numbering. If the drawing shows only part of the board, say which rows it shows. Label row numbers and column letters on the edges.
 - Name holes as number + letter (14f) and say once on the page which is which; words like row and column (行・列) are read both ways. Name a rail hole by the numbered row it lines up with. Many rails have a gap after every 5 holes: if no rail hole lines up with that row, use the next one and say so.
 - Name pins in a way a person can count by hand ("3rd pin from the USB end"), not coordinates alone.
 - For a multimeter, draw which jacks the leads go in, the dial position, and where the red and black probes touch. Use the user's meter model if known.
@@ -67,7 +67,7 @@ Do not hand out a sketch that drives pins as outputs unless the page shows nothi
 
 ## Progress notes
 
-One Markdown file per project, **outside the repository** so build notes never end up in its history. Follow the user's own convention if they have one (for example a notes folder named in their CLAUDE.md); otherwise use `~/.wiring-guide/<repo>/progress.md`. Record its path and the index URL in the project's memory.
+One Markdown file per project, **outside the repository** so build notes never end up in its history. Follow the user's own convention if they have one (for example a notes folder named in their CLAUDE.md or AGENTS.md); otherwise use `~/.wiring-guide/<repo>/progress.md`. Record its path and the index URL in the same place you keep the board placement.
 
 The file has three `##` sections, in this order. Their headings become the headings of the index page, so write them in the user's language:
 

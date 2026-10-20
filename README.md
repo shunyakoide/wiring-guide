@@ -2,9 +2,13 @@
 
 [日本語](README.ja.md)
 
-A Claude Code skill for hardware builds. When you ask where a wire goes, which hole to use, where to solder or where to probe with a multimeter, Claude answers with an illustrated page instead of paragraphs of hole numbers, and keeps an index page of every guide and how far the build has come.
+An agent skill for hardware builds, packaged as a Claude Code plugin. When you ask where a wire goes, which hole to use, where to solder or where to probe with a multimeter, the AI answers with an illustrated page instead of paragraphs of hole numbers, and keeps an index page of every guide and how far the build has come.
 
 ## Install
+
+The skill is a plain [Agent Skills](https://agentskills.io) folder (`skills/wiring-guide/`: `SKILL.md` plus the files it uses), so any AI tool that reads `SKILL.md` can use it.
+
+**Claude Code**
 
 ```
 /plugin marketplace add shunyakoide/wiring-guide
@@ -12,6 +16,12 @@ A Claude Code skill for hardware builds. When you ask where a wire goes, which h
 ```
 
 Or copy `skills/wiring-guide/` into `~/.claude/skills/`.
+
+**Claude apps (claude.ai, desktop)**: zip the `skills/wiring-guide/` folder and upload it under Settings → Capabilities → Skills. Turn on code execution so `render_index.py` can run.
+
+**Claude API and Agent SDK**: load `skills/wiring-guide/` as a custom skill.
+
+**Other AI tools** (GitHub Copilot, Codex, Cursor and others that support Agent Skills): copy `skills/wiring-guide/` into the tool's skills folder; see its docs for where that is. Only Claude Code has been tested so far.
 
 ## Usage
 
@@ -21,7 +31,7 @@ Talk about your build as usual ("where does the LED's resistor go?", "check my e
 - Progress lives in one Markdown file outside your repository (default `~/.wiring-guide/<repo>/progress.md`). See [examples/progress.md](examples/progress.md).
 - `render_index.py` turns that file into the index page. It needs only Python 3.
 
-Pages are published with Claude's Artifact tool when it is available; otherwise they are written as local HTML files.
+Pages are published with Claude's Artifact tool when it is available. Elsewhere they are written as local HTML files and opened in a browser, which works with any tool that can write files.
 
 ## Acknowledgements
 
