@@ -12,6 +12,8 @@
   --bg: #f6f7f8; --fg: #1b2026; --muted: #5d6670; --line: #d9dde2; --surface: #ffffff;
   --board: #e9ecef; --hole: #b9c0c7; --chip: #3a4048; --accent: #2f7d4f;
   --red: #d23b3b; --blk: #2a2f35; --meter: #f2b53a; --hl: #e07a00; --hl-soft: #ffe2b8;
+  /* Wire colors stay the same in both themes: they are the colors of real jumpers. */
+  --w-blk: #1f2328; --w-edge: #e9ecef; --w-grn: #2e9e5b; --w-yel: #d9a400; --w-org: #e8750a; --w-blu: #2f6fd6;
   --warn-bg: #fff4e0; --warn-fg: #7a4a00;
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -42,7 +44,7 @@ p { margin: 0; max-width: 65ch; }
 .lead { color: var(--muted); }
 section { display: grid; gap: 12px; min-width: 0; }
 .figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
-.figure svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 720px; min-width: 520px; }
+.figure svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 720px; min-width: 720px; } /* = viewBox width, so text keeps its size */
 svg text { font-family: var(--font-body); fill: var(--fg); font-size: 13px; }
 svg .m { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
 svg .hl { font-weight: 700; fill: var(--hl); }
