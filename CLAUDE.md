@@ -9,12 +9,12 @@ A Claude Code plugin with one skill: `skills/wiring-guide/`.
 - `skills/wiring-guide/render_index.py`: progress Markdown to index HTML. Python 3 standard library only.
 - `skills/wiring-guide/boards/`: pin notes per board. Every fact needs a source link (datasheet or official docs).
 - `skills/wiring-guide/sketches/`: small Arduino sketches to try after wiring. Arduino core libraries only.
-- `examples/progress.md`: sample progress file.
+- `skills/wiring-guide/progress.example.md`: sample progress file.
 - README Acknowledgements: credit any idea taken from another project there, in both READMEs.
 
 ## Check
 ```
-python3 skills/wiring-guide/render_index.py examples/progress.md /tmp/index.html "Example build log"
+python3 skills/wiring-guide/render_index.py skills/wiring-guide/progress.example.md /tmp/index.html "Example build log"
 ```
 
 ## Rules

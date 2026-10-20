@@ -143,7 +143,7 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
 // The page opens on "All". ‹ › step through: earlier steps fade, the current one glows, later ones hide.
 // Without JavaScript, or when printed with "All", the page shows every step at once.
 (() => {
-  const els = [...document.querySelectorAll('[data-step]')];
+  const els = [...document.querySelectorAll('[data-step]')].filter(e => /^\d+$/.test(e.dataset.step));
   const last = Math.max(0, ...els.map(e => +e.dataset.step));
   if (last < 2) return;
   const bar = document.createElement('div');
@@ -152,9 +152,10 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
     '<span class="pos" aria-live="polite"></span>' +
     '<button type="button" data-s="next" aria-label="' + UI.next + '">›</button>' +
     '<button type="button" data-s="all" aria-pressed="false">' + UI.all + '</button>';
-  document.querySelector('header').after(bar);
+  const top = document.querySelector('header');
+  top ? top.after(bar) : document.body.prepend(bar);
   const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
-  let n = 0;  // start on "All"; ‹ › step through from there
+  let n = 0, seen = 1;  // start on "All"; ‹ › step through from there; All again returns to the step last seen
   const show = () => {
     els.forEach(e => {
       const s = +e.dataset.step;
@@ -167,15 +168,15 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
     bar.querySelector('[data-s="next"]').disabled = n === last;
     all.setAttribute('aria-pressed', n === 0);
   };
-  const go = d => { n = n === 0 ? (d > 0 ? 1 : last) : Math.min(last, Math.max(1, n + d)); show(); };
+  const go = d => { n = n === 0 ? (d > 0 ? 1 : last) : Math.min(last, Math.max(1, n + d)); seen = n; show(); };
   bar.addEventListener('click', e => {
     const s = e.target.closest('button')?.dataset.s;
     if (s === 'prev') go(-1);
     else if (s === 'next') go(1);
-    else if (s === 'all') { n = n === 0 ? 1 : 0; show(); }
+    else if (s === 'all') { n = n === 0 ? seen : 0; show(); }
   });
   addEventListener('keydown', e => {
-    if (e.target.closest?.('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest?.('input, textarea, select, .figure') || e.metaKey || e.ctrlKey || e.altKey) return;  // arrows still scroll a focused figure
     if (e.key === 'ArrowRight') go(1);
     else if (e.key === 'ArrowLeft') go(-1);
   });

@@ -28,7 +28,7 @@
 いつもどおり組み立ての話をすれば（「LED の抵抗はどこ？」「エンコーダの配線を確認して」）、skill が自分で動きます。
 
 - 1 枚のページには、今確かめる所だけを描きます。線の両端を描き、線の表と同じ番号を振ります。
-- 進み具合はリポジトリの外の Markdown 1 つに書きます（既定は `~/.wiring-guide/<repo>/progress.md`）。見本は [examples/progress.md](examples/progress.md)。見出しは日本語でも構いません。
+- 進み具合はリポジトリの外の Markdown 1 つに書きます（既定は `~/.wiring-guide/<repo>/progress.md`）。見本は [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md)。見出しは日本語でも構いません。
 - `render_index.py` がその Markdown から目次のページを作ります。Python 3 だけで動きます。
 
 Claude の Artifact の機能があるときはアーティファクトで出します。無いときはローカルの HTML に書いてブラウザで開くので、ファイルを書ける AI ならどれでも動きます。

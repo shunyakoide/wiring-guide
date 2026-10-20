@@ -28,7 +28,7 @@ Or copy `skills/wiring-guide/` into `~/.claude/skills/`.
 Talk about your build as usual ("where does the LED's resistor go?", "check my encoder wiring"). The skill triggers on its own.
 
 - Each guide draws only what to check now, with both ends of every wire, numbered to match a wire table.
-- Progress lives in one Markdown file outside your repository (default `~/.wiring-guide/<repo>/progress.md`). See [examples/progress.md](examples/progress.md).
+- Progress lives in one Markdown file outside your repository (default `~/.wiring-guide/<repo>/progress.md`). See [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md).
 - `render_index.py` turns that file into the index page. It needs only Python 3.
 
 Pages are published with Claude's Artifact tool when it is available. Elsewhere they are written as local HTML files and opened in a browser, which works with any tool that can write files.
