@@ -1,0 +1,106 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wiring check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Draw only what to check now. Rewrite this page for each check. */
+:root {
+  --bg: #f6f7f8; --fg: #1b2026; --muted: #5d6670; --line: #d9dde2; --surface: #ffffff;
+  --board: #e9ecef; --hole: #b9c0c7; --chip: #3a4048; --accent: #2f7d4f;
+  --red: #d23b3b; --blk: #2a2f35; --meter: #f2b53a; --hl: #e07a00; --hl-soft: #ffe2b8;
+  --warn-bg: #fff4e0; --warn-fg: #7a4a00;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171b; --fg: #e4e8ec; --muted: #9aa3ad; --line: #2c3238; --surface: #1b1f24;
+    --board: #262b31; --hole: #4a525b; --chip: #aab3bd; --accent: #5cc48a;
+    --red: #ff6b6b; --blk: #c9d0d7; --meter: #d9a43a; --hl: #ffb547; --hl-soft: #4a3412;
+    --warn-bg: #3a2c12; --warn-fg: #ffd28a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171b; --fg: #e4e8ec; --muted: #9aa3ad; --line: #2c3238; --surface: #1b1f24;
+  --board: #262b31; --hole: #4a525b; --chip: #aab3bd; --accent: #5cc48a;
+  --red: #ff6b6b; --blk: #c9d0d7; --meter: #d9a43a; --hl: #ffb547; --hl-soft: #4a3412;
+  --warn-bg: #3a2c12; --warn-fg: #ffd28a;
+  color-scheme: dark;
+}
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+.wrap { max-width: 880px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--accent); }
+h1 { font-size: clamp(24px, 4vw, 30px); line-height: 1.3; margin: 0; text-wrap: balance; }
+h2 { font-size: 18px; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 65ch; }
+.lead { color: var(--muted); }
+section { display: grid; gap: 12px; min-width: 0; }
+.figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 720px; min-width: 520px; }
+svg text { font-family: var(--font-body); fill: var(--fg); font-size: 13px; }
+svg .m { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
+svg .hl { font-weight: 700; fill: var(--hl); }
+.note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 8px; padding: 10px 14px; font-size: 14px; max-width: none; }
+.step { font-family: var(--font-mono); color: var(--accent); margin-right: 6px; }
+ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.tbl { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+.tbl th, .tbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 12px; color: var(--muted); font-weight: 500; }
+.tbl td.v { font-family: var(--font-mono); white-space: nowrap; color: var(--muted); }
+.tbl tr.on td { background: var(--hl-soft); }
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">PROJECT · CURRENT STEP</div>
+    <h1>What to check, in one line</h1>
+    <p class="lead">What to connect and what that proves, in two or three sentences.</p>
+  </header>
+
+  <section>
+    <h2>Where it goes</h2>
+    <div class="figure">
+      <!-- Example: breadboard lying sideways (row 1 on the left, column j on top), holes 20px apart. Only the wire to check is thick and --hl. -->
+      <svg viewBox="0 0 720 300" role="img" aria-label="Describe the figure in words (from which hole to which hole)">
+        <rect x="20" y="20" width="680" height="260" rx="8" fill="var(--board)" stroke="var(--line)"/>
+        <!-- Top rail: outer −, inner + -->
+        <text x="30" y="42" class="m">−</text><text x="30" y="62" class="m">＋</text>
+        <!-- Column letters (j on top) -->
+        <g class="m" text-anchor="end">
+          <text x="44" y="94">j</text><text x="44" y="114">i</text><text x="44" y="134">h</text><text x="44" y="154">g</text><text x="44" y="174">f</text>
+        </g>
+        <!-- Place holes with <circle r="3" fill="var(--hole)"/> where needed, or use a <pattern> -->
+        <!-- Wire 1: 3j to top + rail at 3 -->
+        <path d="M100 90 V58" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="100" cy="90" r="5" fill="var(--hl)"/><circle cx="100" cy="58" r="5" fill="var(--hl)"/>
+        <text x="110" y="80" class="hl">1</text>
+        <!-- Row numbers (1 on the left) -->
+        <g class="m" text-anchor="middle"><text x="60" y="270">1</text><text x="100" y="270">3</text><text x="140" y="270">5</text></g>
+      </svg>
+    </div>
+    <ol>
+      <li>A step. <b>Bold the part that matters.</b></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Wires</h2>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr><th>Wire</th><th>From</th><th>To</th><th>Jumper</th></tr></thead>
+        <tbody>
+          <tr class="on"><td><span class="step">1</span>3V3</td><td class="v">3j</td><td class="v">top + (inner) 3</td><td class="v">short</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Warn about irreversible steps and easy ways to break something here.</p>
+  </section>
+</div>
+</body></html>

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "wiring-guide",
+  "description": "Illustrated wiring and assembly guides for hardware projects.",
+  "owner": { "name": "Shunya Koide", "url": "https://github.com/shunyagithub" },
+  "plugins": [
+    { "name": "wiring-guide", "description": "Illustrated wiring and assembly guides with a progress index.", "source": "./", "category": "productivity" }
+  ]
+}
