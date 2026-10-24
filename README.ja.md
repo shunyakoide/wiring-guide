@@ -46,4 +46,4 @@ skill の確認項目の一部は、MIT ライセンスの次の skill を参考
 
 ## ライセンス
 
-[MIT](LICENSE)
+[MIT](LICENSE)。スキルのフォルダだけをコピーしたり zip にしたりしてもライセンスが残るよう、`skills/wiring-guide/LICENSE.txt` に同じものを置いています。

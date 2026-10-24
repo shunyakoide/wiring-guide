@@ -46,4 +46,4 @@ Some checks in the skill were adapted from other MIT-licensed skills. The text w
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The skill folder carries a copy (`skills/wiring-guide/LICENSE.txt`) so the license stays with it when the folder is copied or zipped on its own.

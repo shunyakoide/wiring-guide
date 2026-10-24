@@ -1,6 +1,7 @@
 ---
 name: wiring-guide
 description: Show wiring, breadboard placement, soldering spots and multimeter probe points as an illustrated page, and keep an index of how far the build has come. Use whenever you explain how to wire or assemble something physical ("where does this go", "check my wiring", "which hole", "where do I solder", "where do I probe"), even if the user does not ask for a picture (also 「どこに挿す」「配線を確認」「どこをハンダ付け」「テスターでどこを測る」). Do not use for schematic or PCB layout design, or for firmware-only questions.
+license: MIT. Complete terms in LICENSE.txt
 ---
 
 # Wiring guide
