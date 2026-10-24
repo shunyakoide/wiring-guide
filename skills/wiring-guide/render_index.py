@@ -1,6 +1,8 @@
 """Build the index page from a progress file (see SKILL.md, "Progress notes").
 
-Usage: python3 render_index.py <progress.md> <out.html> <page title>
+Usage: python3 render_index.py <progress.md> <out.html> <page title> [lang]
+
+lang is the page language for <html lang> (default en), e.g. ja.
 
 The file's three ## sections are read by position (now, pages, log), and their
 headings are reused on the page, so the notes can be in any language.
@@ -53,7 +55,7 @@ def state_class(state):
     return "done" if s.startswith(DONE) else "ref" if s.startswith(REF) else "now"
 
 
-def render(md, title):
+def render(md, title, lang="en"):
     (now_h, now), (_, rows), (log_h, log) = parse(md)
     e = html.escape
     groups = {}
@@ -75,16 +77,18 @@ def render(md, title):
   <section><h2>{e(log_h)}</h2><ul class="log">{li(log)}</ul></section>
 </div>"""
     page = TEMPLATE.read_text().replace("</style>", EXTRA_CSS, 1)
+    page = page.replace('<html lang="en"', f'<html lang="{e(lang)}"', 1)
     page = re.sub(r"<title>.*?</title>", lambda _: f"<title>{e(title)}</title>", page)
     return re.sub(r'<div class="wrap">.*</div>', lambda _: body, page, flags=re.S)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         sys.exit(__doc__)
-    src, out, title = sys.argv[1:]
+    src, out, title, *lang = sys.argv[1:]
     md = Path(src).read_text(encoding="utf-8")
-    page = render(md, title)
+    page = render(md, title, *lang)
+    assert '<html lang="' + html.escape(lang[0] if lang else "en") + '"' in page, "lang not set"
     rows = parse(md)[1][1]
     assert rows and all(html.escape(r[2]) in page for r in rows), "a page URL is missing from the output"
     Path(out).write_text(page, encoding="utf-8")
