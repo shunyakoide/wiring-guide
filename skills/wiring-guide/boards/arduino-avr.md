@@ -7,7 +7,7 @@ Pin notes to check before drawing. Confirm against the sources below; clones can
 - Lower header (8 sockets), counted from the USB end: an unlabelled socket (not connected), IOREF, RESET, 3.3V, 5V, GND, GND, VIN. Then A0 … A5.
 - D0 and D1 are the USB serial port. Anything wired to them can block uploads; leave them free.
 - D13 also drives the on-board "L" LED.
-- PWM (`analogWrite`, marked ~): D3, D5, D6, D9, D10, D11. A0–A5 read 0–1023 with `analogRead`.
+- PWM (`analogWrite`, marked ~): D3, D5, D6, D9, D10, D11. A0–A5 read 0–1023 with `analogRead`. They also work as digital pins (`pinMode`, `INPUT_PULLUP`, `digitalWrite`), which helps when the analog header is the one facing the breadboard.
 - I2C is A4 = SDA, A5 = SCL (the same signals as the SDA/SCL pins by AREF).
 - Per-pin current: 20 mA is a safe working limit, 40 mA is the absolute maximum. Drive motors, relays and LED strips through a transistor or driver.
 

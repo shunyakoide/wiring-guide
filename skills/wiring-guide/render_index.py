@@ -14,7 +14,7 @@ from pathlib import Path
 
 TEMPLATE = Path(__file__).with_name("template.html")
 DONE = ("done", "decided", "✓", "済", "決定")
-REF = ("ref", "参考")
+REF = ("ref", "↗", "参考")
 
 EXTRA_CSS = """.nowbox { background: var(--hl-soft); border-radius: 10px; padding: 14px 16px; }
 .nowbox ul, .log { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }

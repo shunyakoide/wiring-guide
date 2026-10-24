@@ -21,6 +21,10 @@
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
+/* Zen Kaku draws Han characters the Japanese way, so Chinese and Korean pages use their own fonts. */
+:root:lang(zh) { --font-body: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", system-ui, sans-serif; }
+:root:lang(zh-TW), :root:lang(zh-HK), :root:lang(zh-Hant) { --font-body: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", system-ui, sans-serif; }
+:root:lang(ko) { --font-body: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14171b; --fg: #e4e8ec; --muted: #9aa3ad; --line: #2c3238; --surface: #1b1f24;
