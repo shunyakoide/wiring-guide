@@ -15,6 +15,8 @@
   /* Holes and --hl keep 3:1 on --board, and --hl text 4.5:1, so they read in daylight and in print. */
   /* Wire colors stay the same in both themes: they are the colors of real jumpers. */
   --w-blk: #1f2328; --w-edge: #8b939b; --w-grn: #2e9e5b; --w-yel: #d9a400; --w-org: #e8750a; --w-blu: #2f6fd6;
+  /* Resistor body and color bands (digits 0–9, then gold and silver): fixed like the wires. */
+  --res: #e6d3a8; --b0: #1f2328; --b1: #7a4a24; --b2: #d23b3b; --b3: #e8750a; --b4: #e8c20a; --b5: #2e9e5b; --b6: #2f6fd6; --b7: #8a4fc7; --b8: #8b939b; --b9: #f4f4f4; --b-gold: #b8962e; --b-silver: #b4bac0;
   --warn-bg: #fff4e0; --warn-fg: #7a4a00;
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -65,7 +67,7 @@ ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
 .zoom button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
 .zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; }
 pre { margin: 0; font: 13px/1.6 var(--font-mono); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
-.stepper { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 0; background: var(--bg); }
+.stepper { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 0; background: var(--bg); }
 .stepper button { font: 500 14px/1 var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 40px; height: 36px; padding: 0 12px; cursor: pointer; }
 .stepper button:disabled { opacity: .4; cursor: default; }
 .stepper button[aria-pressed="true"] { border-color: var(--hl); color: var(--hl); }
@@ -77,6 +79,8 @@ pre { margin: 0; font: 13px/1.6 var(--font-mono); background: var(--surface); bo
 li[data-step].now, tr[data-step].now td { background: var(--hl-soft); }
 li[data-step].now { border-radius: 4px; }
 g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px var(--hl)); }
+.nowstep { background: var(--hl-soft); border-radius: 8px; padding: 10px 14px; max-width: none; }
+.nowstep .n { font-family: var(--font-mono); color: var(--hl); font-weight: 700; margin-right: 8px; }
 </style>
 </head><body>
 <div class="wrap">
@@ -158,6 +162,40 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
   top ? top.after(bar) : document.body.prepend(bar);
   const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
   let n = 0, seen = 1;  // start on "All"; ‹ › step through from there; All again returns to the step last seen
+  // Under each stepped drawing, the current step's text; the drawing glides to that step's parts.
+  const figs = [...document.querySelectorAll('.figure svg')].filter(svg => svg.querySelector('[data-step]')).map(svg => {
+    const cap = document.createElement('p');
+    cap.className = 'nowstep';
+    cap.hidden = true;
+    cap.setAttribute('aria-live', 'polite');
+    svg.closest('.figure').after(cap);
+    const b = svg.viewBox.baseVal;
+    return { svg, cap, home: [b.x, b.y, b.width, b.height], at: [b.x, b.y, b.width, b.height], id: 0 };
+  });
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const aim = f => {
+    const [hx, hy, W, H] = f.home;
+    const boxes = n ? [...f.svg.querySelectorAll(`[data-step="${n}"]`)].map(e => e.getBBox()) : [];
+    if (!boxes.length) return f.home;
+    const x0 = Math.min(...boxes.map(b => b.x)) - 40, y0 = Math.min(...boxes.map(b => b.y)) - 40;
+    const x1 = Math.max(...boxes.map(b => b.x + b.width)) + 40, y1 = Math.max(...boxes.map(b => b.y + b.height)) + 40;
+    // Keep the drawing's shape so the page does not jump, and show at least 40% of it so the user keeps their place.
+    const w = Math.min(W, Math.max(x1 - x0, (y1 - y0) * W / H, W * 0.4)), h = w * H / W;
+    const cx = Math.min(Math.max((x0 + x1) / 2, hx + w / 2), hx + W - w / 2);
+    const cy = Math.min(Math.max((y0 + y1) / 2, hy + h / 2), hy + H - h / 2);
+    return [cx - w / 2, cy - h / 2, w, h];
+  };
+  const glide = f => {
+    const from = f.at, to = aim(f), t0 = performance.now(), ms = still.matches ? 0 : 250, id = ++f.id;
+    const tick = t => {
+      if (f.id !== id) return;
+      const k = ms ? Math.min(1, (t - t0) / ms) : 1, e = 1 - (1 - k) ** 3;
+      f.at = from.map((v, i) => v + (to[i] - v) * e);
+      f.svg.setAttribute('viewBox', f.at.join(' '));
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
   const show = () => {
     els.forEach(e => {
       const s = +e.dataset.step;
@@ -169,6 +207,12 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
     bar.querySelector('[data-s="prev"]').disabled = n === 1;
     bar.querySelector('[data-s="next"]').disabled = n === last;
     all.setAttribute('aria-pressed', n === 0);
+    const li = n && document.querySelector(`li[data-step="${n}"]`);
+    figs.forEach(f => {
+      f.cap.hidden = !li;
+      f.cap.innerHTML = li ? '<span class="n">' + n + ' / ' + last + '</span>' + li.innerHTML : '';
+      glide(f);
+    });
   };
   const go = d => { n = n === 0 ? (d > 0 ? 1 : last) : Math.min(last, Math.max(1, n + d)); seen = n; show(); };
   bar.addEventListener('click', e => {
