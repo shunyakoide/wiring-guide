@@ -25,6 +25,8 @@
 :root:lang(zh) { --font-body: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", system-ui, sans-serif; }
 :root:lang(zh-TW), :root:lang(zh-HK), :root:lang(zh-Hant) { --font-body: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", system-ui, sans-serif; }
 :root:lang(ko) { --font-body: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif; }
+:root:lang(ar), :root:lang(fa), :root:lang(ur) { --font-body: "Geeza Pro", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif; }
+:root:lang(he) { --font-body: "Arial Hebrew", "Noto Sans Hebrew", "Segoe UI", system-ui, sans-serif; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14171b; --fg: #e4e8ec; --muted: #9aa3ad; --line: #2c3238; --surface: #1b1f24;
@@ -51,16 +53,17 @@ p { margin: 0; max-width: 65ch; }
 .lead { color: var(--muted); }
 section { display: grid; gap: 12px; min-width: 0; }
 .figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure, .zoom, .stepper { direction: ltr; }  /* a drawing of the bench and its ‹ › stay left to right on a dir="rtl" page */
 .figure svg { display: block; width: 100%; height: auto; margin: 0 auto; } /* the script pins it to the viewBox width, so text keeps its size */
 svg text { font-family: var(--font-body); fill: var(--fg); font-size: 13px; }
 svg .m { font-family: var(--font-mono); font-size: 12px; fill: var(--muted); }
 svg .hl { font-weight: 700; fill: var(--hl); }
 .note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 8px; padding: 10px 14px; font-size: 15px; max-width: none; }
 .step { font-family: var(--font-mono); color: var(--accent); margin-right: 6px; }
-ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
+ol { margin: 0; padding-inline-start: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
 .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .tbl { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
-.tbl th, .tbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th, .tbl td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .tbl th { font-size: 13px; color: var(--muted); font-weight: 500; }
 .tbl td:first-child, .tbl th { white-space: nowrap; }
 .tbl td.v { font-family: var(--font-mono); white-space: nowrap; color: var(--muted); }
@@ -179,12 +182,14 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const aim = f => {
     const [hx, hy, W, H] = f.home;
+    f.mid = null;
     const boxes = n ? [...f.svg.querySelectorAll(`[data-step="${n}"]`)].map(e => e.getBBox()) : [];
     if (!boxes.length) return f.home;
     const x0 = Math.min(...boxes.map(b => b.x)) - 40, y0 = Math.min(...boxes.map(b => b.y)) - 40;
     const x1 = Math.max(...boxes.map(b => b.x + b.width)) + 40, y1 = Math.max(...boxes.map(b => b.y + b.height)) + 40;
-    // Keep the drawing's shape so the page does not jump, and show at least 40% of it so the user keeps their place.
-    const w = Math.min(W, Math.max(x1 - x0, (y1 - y0) * W / H, W * 0.4)), h = w * H / W;
+    f.mid = (x0 + x1) / 2;
+    // Keep the drawing's shape so the page does not jump, and show at least 60% of it so the user keeps their place.
+    const w = Math.min(W, Math.max(x1 - x0, (y1 - y0) * W / H, W * 0.6)), h = w * H / W;
     const cx = Math.min(Math.max((x0 + x1) / 2, hx + w / 2), hx + W - w / 2);
     const cy = Math.min(Math.max((y0 + y1) / 2, hy + h / 2), hy + H - h / 2);
     return [cx - w / 2, cy - h / 2, w, h];
@@ -196,6 +201,9 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
       const k = ms ? Math.min(1, (t - t0) / ms) : 1, e = 1 - (1 - k) ** 3;
       f.at = from.map((v, i) => v + (to[i] - v) * e);
       f.svg.setAttribute('viewBox', f.at.join(' '));
+      // On a narrow screen the figure scrolls sideways: keep the step's parts in the visible part.
+      const fig = f.svg.closest('.figure'), w = f.svg.getBoundingClientRect().width;
+      fig.scrollLeft = f.mid == null ? 0 : (f.mid - f.at[0]) / f.at[2] * w - fig.clientWidth / 2;
       if (k < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

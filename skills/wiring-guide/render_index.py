@@ -15,9 +15,10 @@ from pathlib import Path
 TEMPLATE = Path(__file__).with_name("template.html")
 DONE = ("done", "decided", "✓", "済", "決定")
 REF = ("ref", "↗", "参考")
+RTL = ("ar", "fa", "he", "ur")
 
 EXTRA_CSS = """.nowbox { background: var(--hl-soft); border-radius: 10px; padding: 14px 16px; }
-.nowbox ul, .log { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.nowbox ul, .log { margin: 0; padding-inline-start: 1.2em; display: grid; gap: 4px; }
 .pages { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .pages li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .pages li:last-child { border-bottom: 0; }
@@ -77,7 +78,8 @@ def render(md, title, lang="en"):
   <section><h2>{e(log_h)}</h2><ul class="log">{li(log)}</ul></section>
 </div>"""
     page = TEMPLATE.read_text().replace("</style>", EXTRA_CSS, 1)
-    page = page.replace('<html lang="en"', f'<html lang="{e(lang)}"', 1)
+    rtl = ' dir="rtl"' if lang.split("-")[0] in RTL else ""
+    page = page.replace('<html lang="en"', f'<html lang="{e(lang)}"{rtl}', 1)
     page = re.sub(r"<title>.*?</title>", lambda _: f"<title>{e(title)}</title>", page)
     return re.sub(r'<div class="wrap">.*</div>', lambda _: body, page, flags=re.S)
 
