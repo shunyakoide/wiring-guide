@@ -6,7 +6,7 @@ An agent skill for hardware builds, packaged as a Claude Code plugin. When you a
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/example-dark.png">
-  <img src="docs/example-light.png" alt="A wiring page made from spec.example.json: an Arduino Uno behind a breadboard, wires numbered in the order to place them, an LED with its resistor and a button, then the steps." width="720">
+  <img src="docs/example-light.png" alt="A wiring page made from spec.example.json: an Arduino Uno behind a breadboard, wires numbered in the order to place them, an LED with its resistor and a button." width="720">
 </picture>
 
 ## Install

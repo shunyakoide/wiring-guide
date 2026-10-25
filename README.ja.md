@@ -6,7 +6,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/example-dark.png">
-  <img src="docs/example-light.png" alt="spec.example.json から作った配線ページ。ブレッドボードの奥に Arduino Uno、挿す順に番号を振った線、抵抗つきの LED とボタン、その下に手順。" width="720">
+  <img src="docs/example-light.png" alt="spec.example.json から作った配線ページ。ブレッドボードの奥に Arduino Uno、挿す順に番号を振った線、抵抗つきの LED とボタン。" width="720">
 </picture>
 
 ## 入れ方

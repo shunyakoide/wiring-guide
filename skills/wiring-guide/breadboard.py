@@ -440,14 +440,18 @@ class Page:
             for n in range(1, b.rows + 1):
                 dots.append(f'<circle cx="{b.x(n)}" cy="{y}" r="2.6"/>')
         out.append(f'<g fill="var(--hole)">{"".join(dots)}</g>')
-        nums = []
+        return "".join(out)
+
+    def svg_numbers(self):
+        b, nums = self.b, []
         for n in range(1, b.rows + 1):
             x = b.x(n)
             nums.append(f'<text x="{x}" y="{b.num_top}">{n}</text><text x="{x}" y="{b.num_bot}">{n}</text>')
             if n not in self.straddled:
                 nums.append(f'<text x="{x}" y="{b.num_mid}">{n}</text>')
-        out.append(f'<g class="m" text-anchor="middle">{"".join(nums)}</g>')
-        return "".join(out)
+        # above the wires, with a rim of board colour, so a wire passing a number does not hide it
+        return f'<g class="m" text-anchor="middle" stroke="var(--board)" stroke-width="4" paint-order="stroke">{"".join(nums)}</g>'
+
 
     def svg_straddlers(self):
         out = []
@@ -809,7 +813,11 @@ class Page:
         # svg
         body = [self.svg_board(), self.svg_boards_off(), self.svg_straddlers()]
         placed = []
-        for it, svg in self.items.items():
+        wires = [kv for kv in self.items.items() if isinstance(kv[1], tuple)]
+        for it, svg in wires + [(None, None)] + [kv for kv in self.items.items() if kv not in wires]:   # wires, numbers, then parts on top
+            if it is None:
+                body.append(self.svg_numbers())
+                continue
             if isinstance(svg, tuple):
                 g, mid, n = svg
                 bx, by = self.badge_spot(mid, placed)
