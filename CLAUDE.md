@@ -13,6 +13,7 @@ A Claude Code plugin with one skill: `skills/wiring-guide/`.
 - `skills/wiring-guide/boards/`: pin notes per board. Every fact needs a source link (datasheet or official docs).
 - `skills/wiring-guide/sketches/`: small Arduino sketches to try after wiring. Arduino core libraries only.
 - `skills/wiring-guide/progress.example.md`: sample progress file.
+- `docs/`: README screenshots, taken from `spec.example.json` in light and dark. Retake them when the page's look changes.
 - README Acknowledgements: credit any idea taken from another project there, in both READMEs.
 
 ## Check

@@ -4,6 +4,11 @@
 
 電子工作のための AI の skill です（Claude Code の plugin としても入れられます）。「この線はどこへ」「どの穴に挿す」「どこをハンダ付けする」「テスターでどこを測る」と聞くと、穴の番号を並べた文章ではなく、絵の入ったページで答えます。作ったページの一覧と、どこまで進んだかを目次のページにまとめます。
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/example-dark.png">
+  <img src="docs/example-light.png" alt="spec.example.json から作った配線ページ。ブレッドボードの奥に Arduino Uno、挿す順に番号を振った線、抵抗つきの LED とボタン、その下に手順。" width="720">
+</picture>
+
 ## 入れ方
 
 中身は [Agent Skills](https://agentskills.io) の形のフォルダ（`skills/wiring-guide/`：`SKILL.md` と、それが使うファイル）なので、`SKILL.md` を読める AI ならどれでも使えます。

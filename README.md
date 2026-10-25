@@ -4,6 +4,11 @@
 
 An agent skill for hardware builds, packaged as a Claude Code plugin. When you ask where a wire goes, which hole to use, where to solder or where to probe with a multimeter, the AI answers with an illustrated page instead of paragraphs of hole numbers, and keeps an index page of every guide and how far the build has come.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/example-dark.png">
+  <img src="docs/example-light.png" alt="A wiring page made from spec.example.json: an Arduino Uno behind a breadboard, wires numbered in the order to place them, an LED with its resistor and a button, then the steps." width="720">
+</picture>
+
 ## Install
 
 The skill is a plain [Agent Skills](https://agentskills.io) folder (`skills/wiring-guide/`: `SKILL.md` plus the files it uses), so any AI tool that reads `SKILL.md` can use it.
