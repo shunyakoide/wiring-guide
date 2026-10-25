@@ -350,6 +350,7 @@ class Page:
         for pd in s.get("parts", []):
             self.add_part(pd)
         self.lane_i = {"far": 0, "near": 0}
+        self.runs = []
         for wd in s.get("wires", []):
             self.add_wire(wd)
 
@@ -706,18 +707,24 @@ class Page:
             self.lane_i[side] += 1
             path = f"M{pon[0]} {pon[1]} V{lane} H{poff[0]} V{poff[1]}"
             mid = ((pon[0] + poff[0]) / 2, lane)
-        elif pa[1] == pc[1] and abs(pa[0] - pc[0]) > P:         # along one letter: bow out, each wire a little more
-            up = -1 if pa[1] < (self.b.ly[self.b.top5[-1]] + self.b.ly[self.b.bot5[0]]) / 2 else 1
-            bend = up * (10 + 7 * (n % 3))
-            mx = (pa[0] + pc[0]) / 2
-            path = f"M{pa[0]} {pa[1]} Q{mx} {pa[1] + 2 * bend} {pc[0]} {pc[1]}"
-            mid = (mx, pa[1] + bend)
-        else:                                                   # a straight line reads better than arcs when there are many
+        elif pa[0] == pc[0] or pa[1] == pc[1] and abs(pa[0] - pc[0]) <= P:
             path = f"M{pa[0]} {pa[1]} L{pc[0]} {pc[1]}"
             mid = ((pa[0] + pc[0]) / 2, (pa[1] + pc[1]) / 2)
+        else:                                                   # up, across, down: each wire on its own lane, so none lie on top of each other
+            x0, x1 = sorted((pa[0], pc[0]))
+            far = pa[1] < self.b.ly[self.b.bot5[0]]
+            rows = [self.b.ly[l] for l in (self.b.top5 if far else self.b.bot5)]
+            lanes = sorted((rows[0] + 6 * i for i in range(int((rows[-1] - rows[0]) / 6) + 1)), key=lambda y: abs(y - pc[1]))
+            lane = next((y for y in lanes if not any(abs(y - uy) < 6 and u0 < x1 + 6 and x0 < u1 + 6 for uy, u0, u1 in self.runs)), lanes[0])
+            self.runs.append((lane, x0, x1))
+            path = f"M{pa[0]} {pa[1]} V{lane} H{pc[0]} V{pc[1]}"
+            if far != (pc[1] < self.b.ly[self.b.bot5[0]]):     # across the gap: go down between two strips, clear of the parts there
+                xv = pc[0] - P / 2 if pc[0] > pa[0] else pc[0] + P / 2
+                path = f"M{pa[0]} {pa[1]} V{lane} H{xv} V{pc[1]} H{pc[0]}"
+            mid = ((pa[0] + pc[0]) / 2, lane)
         dash = ' stroke-dasharray="7 5"' if d.get("dashed") else ""
         edge = f'<path d="{path}" fill="none" stroke="var(--w-edge)" stroke-width="6" stroke-linecap="round"{dash}/>' if d.get("color") == "black" else ""
-        g = (f'{edge}<path d="{path}" fill="none" stroke="{col}" stroke-width="4" stroke-linecap="round"{dash}/>'
+        g = (f'{edge}<path d="{path}" fill="none" stroke="{col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"{dash}/>'
              + "".join(f'<circle cx="{x}" cy="{y}" r="4.2" fill="{col}" stroke="var(--surface)" stroke-width="1.5"/>' for x, y in (pa, pc)))
         self.items[wid] = (g, mid, n)
         label = f'<span class="step">{n}</span>{esc(d.get("label", ""))}'
@@ -1249,8 +1256,9 @@ def _plan(spec, gap):
         m = HOLE.match(hole)
         return (int(m[1]), b.side_of(m[2])) if m else None
 
-    def free_hole(n, half, prefer=None):
+    def free_hole(n, half, prefer=None, gap_first=False):
         ls = near_l if half == "near" else far_l
+        ls = ls[::-1] if gap_first else ls
         for l in ([prefer] if prefer in ls else []) + ls:
             h = f"{n}{l}"
             if h not in used:
@@ -1287,7 +1295,7 @@ def _plan(spec, gap):
                 n += 1
         return 1
 
-    wires, signal_i, lanes = [], 0, {"near": 0, "far": 0}
+    wires, signal_i = [], 0
     colors = ["green", "yellow", "orange", "blue"]
     for root, eps in nets.items():
         terms, label = [], ""
@@ -1336,13 +1344,9 @@ def _plan(spec, gap):
         signal_i += 1
         ends = [t[1] if t[0] == "pin" else None for t in terms]
         for a, c in zip(terms, terms[1:]):
-            # wires on one half take turns on the letters, so they do not lie on top of each other
-            half = (a[1][1] if a[0] == "strip" else c[1][1] if c[0] == "strip" else "far")
-            lane = lanes[half] % 4
-            lanes[half] += 1
-            pick = (near_l if half == "near" else far_l)[lane]
-            fa = a[1] if a[0] == "pin" else free_hole(*a[1], prefer=pick)
-            fc = c[1] if c[0] == "pin" else free_hole(*c[1], prefer=pick)
+            # from the gap side to the edge side, so wires that run side by side step down without crossing
+            fa = a[1] if a[0] == "pin" else free_hole(*a[1], gap_first=True)
+            fc = c[1] if c[0] == "pin" else free_hole(*c[1], gap_first=a[0] == "strip" and a[1][1] != c[1][1])
             wires.append({"from": fa, "to": fc, "color": col, "label": label, "_net": root})
     start = max([w["n"] for w in spec.get("wires", [])], default=0)
     for i, w in enumerate(wires, start + 1):
