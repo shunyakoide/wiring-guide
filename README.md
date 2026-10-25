@@ -2,6 +2,8 @@
 
 [日本語](README.ja.md)
 
+**See how to wire it at a glance, instead of reading it from a list of hole numbers.**
+
 An agent skill for hardware builds, packaged as a Claude Code plugin. When you ask where a wire goes, which hole to use, where to solder or where to probe with a multimeter, the AI answers with an illustrated page instead of paragraphs of hole numbers, and keeps an index page of every guide and how far the build has come.
 
 <picture>
