@@ -65,7 +65,7 @@ def render(md, title, lang="en"):
     cards = "".join(
         f'<section><h2>{e(stage)}</h2><ul class="pages">'
         + "".join(
-            f'<li><a href="{e(url)}" target="_blank" rel="noopener">{e(name)}</a>'
+            f'<li><a href="{e(Path(url).as_uri() if url.startswith("/") else url)}" target="_blank" rel="noopener">{e(name)}</a>'
             f'<span class="st {state_class(state)}">{e(state)}</span><span class="d">{e(date)}</span></li>'
             for name, url, state, date in items)
         + "</ul></section>"

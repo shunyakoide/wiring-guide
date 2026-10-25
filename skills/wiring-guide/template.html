@@ -18,6 +18,7 @@
   /* Resistor body and color bands (digits 0–9, then gold and silver): fixed like the wires. */
   --res: #e6d3a8; --b0: #1f2328; --b1: #7a4a24; --b2: #d23b3b; --b3: #e8750a; --b4: #e8c20a; --b5: #2e9e5b; --b6: #2f6fd6; --b7: #8a4fc7; --b8: #8b939b; --b9: #f4f4f4; --b-gold: #b8962e; --b-silver: #b4bac0;
   --warn-bg: #fff4e0; --warn-fg: #7a4a00;
+  --glow: rgba(47, 125, 79, .10); --shadow: rgba(27, 32, 38, .12);
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -33,6 +34,7 @@
     --board: #262b31; --hole: #6b747d; --chip: #aab3bd; --accent: #5cc48a;
     --red: #ff6b6b; --blk: #c9d0d7; --meter: #d9a43a; --hl: #ffb547; --hl-soft: #4a3412;
     --warn-bg: #3a2c12; --warn-fg: #ffd28a;
+    --glow: rgba(92, 196, 138, .10); --shadow: rgba(0, 0, 0, .45);
     color-scheme: dark;
   }
 }
@@ -41,18 +43,20 @@
   --board: #262b31; --hole: #6b747d; --chip: #aab3bd; --accent: #5cc48a;
   --red: #ff6b6b; --blk: #c9d0d7; --meter: #d9a43a; --hl: #ffb547; --hl-soft: #4a3412;
   --warn-bg: #3a2c12; --warn-fg: #ffd28a;
+  --glow: rgba(92, 196, 138, .10); --shadow: rgba(0, 0, 0, .45);
   color-scheme: dark;
 }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.75; }
-.wrap { max-width: 880px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 28px; }
-header { display: grid; gap: 6px; }
-.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--accent); }
-h1 { font-size: clamp(24px, 4vw, 30px); line-height: 1.3; margin: 0; text-wrap: balance; }
+body { margin: 0; background: radial-gradient(1100px 420px at 50% -160px, var(--glow), transparent 70%) no-repeat, var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.75; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 28px; }
+header { display: grid; gap: 8px; padding-block-end: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+h1 { font-size: clamp(26px, 4.2vw, 36px); line-height: 1.25; letter-spacing: -.01em; margin: 0; max-width: 32em; text-wrap: balance; }
 h2 { font-size: 18px; margin: 0; text-wrap: balance; }
 p { margin: 0; max-width: 65ch; }
 .lead { color: var(--muted); }
 section { display: grid; gap: 12px; min-width: 0; }
-.figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.figure { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; overflow-x: auto; box-shadow: 0 1px 2px var(--shadow), 0 12px 32px -18px var(--shadow); }
 .figure, .zoom, .stepper { direction: ltr; }  /* a drawing of the bench and its ‹ › stay left to right on a dir="rtl" page */
 .figure svg { display: block; width: 100%; height: auto; margin: 0 auto; } /* the script pins it to the viewBox width, so text keeps its size */
 svg text { font-family: var(--font-body); fill: var(--fg); font-size: 13px; }
@@ -61,33 +65,42 @@ svg .hl { font-weight: 700; fill: var(--hl); }
 .note { background: var(--warn-bg); color: var(--warn-fg); border-radius: 8px; padding: 10px 14px; font-size: 15px; max-width: none; }
 .step { font-family: var(--font-mono); color: var(--accent); margin-right: 6px; }
 ol { margin: 0; padding-inline-start: 1.4em; display: grid; gap: 4px; max-width: 65ch; }
-.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 .tbl { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
 .tbl th, .tbl td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-.tbl th { font-size: 13px; color: var(--muted); font-weight: 500; }
+.tbl th { font-size: 13px; color: var(--muted); font-weight: 500; background: var(--bg); }
+.tbl tbody tr:last-child td { border-bottom: 0; }
 .tbl td:first-child, .tbl th { white-space: nowrap; }
 .tbl td.v { font-family: var(--font-mono); white-space: nowrap; color: var(--muted); }
 .tbl tr.on td { background: var(--hl-soft); }
-.zoom { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
-.zoom button { font: 500 13px/1 var(--font-mono); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 36px; height: 32px; padding: 0 10px; cursor: pointer; }
+.zoom { display: flex; gap: 0; justify-content: flex-end; align-items: center; }
+.zoom button { font: 500 13px/1 var(--font-mono); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 0; margin-inline-start: -1px; min-width: 36px; height: 32px; padding: 0 10px; cursor: pointer; }
+.zoom .lv + button { border-radius: 8px 0 0 8px; }
+.zoom button:last-child { border-radius: 0 8px 8px 0; }
 .zoom button:hover { border-color: var(--muted); }
 .zoom button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
-.zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; }
+.zoom .lv { font: 12px var(--font-mono); color: var(--muted); min-width: 4ch; text-align: right; margin-inline-end: 10px; }
 pre { margin: 0; font: 13px/1.6 var(--font-mono); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
-.stepper { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 0; background: var(--bg); }
-.stepper button { font: 500 14px/1 var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 40px; height: 36px; padding: 0 12px; cursor: pointer; }
+/* The stepper floats at the bottom, where a thumb reaches it and the drawing stays in view. */
+.stepper { position: fixed; z-index: 2; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 4px; align-items: center; padding: 6px; border-radius: 999px; background: var(--fg); box-shadow: 0 2px 4px var(--shadow), 0 16px 40px -12px var(--shadow); }
+body.stepped .wrap { padding-block-end: 120px; }
+.stepper button { font: 500 15px/1 var(--font-body); color: var(--bg); background: transparent; border: 0; border-radius: 999px; min-width: 44px; height: 44px; padding: 0 16px; cursor: pointer; }
+.zoom button:hover { background: var(--line); }
+.stepper button:hover:not(:disabled) { background: color-mix(in srgb, var(--bg) 18%, transparent); }
+@media (prefers-reduced-motion: no-preference) { .stepper button, .zoom button { transition: background-color .15s, transform .15s; } .stepper button:active:not(:disabled), .zoom button:active { transform: scale(.94); } }
 .stepper button:disabled { opacity: .4; cursor: default; }
-.stepper button[aria-pressed="true"] { border-color: var(--hl); color: var(--hl); }
-.stepper button:focus-visible { outline: 2px solid var(--hl); outline-offset: 1px; }
+.stepper button[aria-pressed="true"] { background: var(--hl); color: var(--bg); font-weight: 700; }
+.stepper button:focus-visible { outline: 2px solid var(--bg); outline-offset: -4px; }
 @media (pointer: coarse) { .zoom button, .stepper button { min-width: 44px; height: 44px; } }  /* finger-sized on touch screens */
-.stepper .pos { font: 500 14px var(--font-mono); min-width: 6ch; text-align: center; }
+.stepper .pos { font: 500 14px var(--font-mono); color: var(--bg); min-width: 6ch; text-align: center; }
 [data-step].past { opacity: .35; }
 [data-step].later { display: none; }
 li[data-step].now, tr[data-step].now td { background: var(--hl-soft); }
-li[data-step].now { border-radius: 4px; }
-g[data-step].now { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px var(--hl)); }
-.nowstep { background: var(--hl-soft); border-radius: 8px; padding: 10px 14px; max-width: none; }
-.nowstep .n { font-family: var(--font-mono); color: var(--hl); font-weight: 700; margin-right: 8px; }
+li[data-step].now { border-radius: 6px; box-shadow: -6px 0 0 var(--hl-soft); }
+g[data-step].now :is(path, circle, rect, line, ellipse, polygon, polyline) { filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 1px var(--hl)); }
+.nowstep { display: flex; gap: 12px; align-items: baseline; background: var(--hl-soft); border-inline-start: 4px solid var(--hl); border-radius: 10px; padding: 12px 16px; max-width: none; font-size: 17px; }
+.nowstep[hidden] { display: none; }
+.nowstep .n { flex: none; direction: ltr; unicode-bidi: isolate; font-family: var(--font-mono); font-size: 14px; color: var(--hl); font-weight: 700; }
 </style>
 </head><body>
 <div class="wrap">
@@ -159,6 +172,7 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
   const els = [...document.querySelectorAll('[data-step]')].filter(e => /^\d+$/.test(e.dataset.step));
   const last = Math.max(0, ...els.map(e => +e.dataset.step));
   if (last < 2) return;
+  document.body.classList.add('stepped');
   const bar = document.createElement('div');
   bar.className = 'stepper';
   bar.innerHTML = '<button type="button" data-s="prev" aria-label="' + UI.prev + '">‹</button>' +
@@ -168,7 +182,7 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
   const top = document.querySelector('header');
   top ? top.after(bar) : document.body.prepend(bar);
   const pos = bar.querySelector('.pos'), all = bar.querySelector('[data-s="all"]');
-  let n = 0, seen = 1;  // start on "All"; ‹ › step through from there; All again returns to the step last seen
+  let n = Math.min(last, +(location.hash.match(/^#step=(\d+)$/) || [])[1] || 0), seen = n || 1;  // start on "All" (or on #step=n); ‹ › step through; All again returns to the step last seen
   // Under each stepped drawing, the current step's text; the drawing glides to that step's parts.
   const figs = [...document.querySelectorAll('.figure svg')].filter(svg => svg.querySelector('[data-step]')).map(svg => {
     const cap = document.createElement('p');
@@ -222,7 +236,7 @@ const UI = { all: 'All', prev: 'Previous step', next: 'Next step', fit: 'Fit', z
     const li = n && document.querySelector(`li[data-step="${n}"]`);
     figs.forEach(f => {
       f.cap.hidden = !li;
-      f.cap.innerHTML = li ? '<span class="n">' + n + ' / ' + last + '</span>' + li.innerHTML : '';
+      f.cap.innerHTML = li ? '<span class="n">' + n + ' / ' + last + '</span><span>' + li.innerHTML + '</span>' : '';
       glide(f);
     });
   };

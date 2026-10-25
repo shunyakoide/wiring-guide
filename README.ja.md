@@ -17,7 +17,7 @@
 
 または `skills/wiring-guide/` を `~/.claude/skills/` にコピーします。
 
-**Claude のアプリ（claude.ai・デスクトップ）**：`skills/wiring-guide/` フォルダを zip にして、設定 → 機能 → Skills からアップロードします。`render_index.py` を動かすため、コード実行を有効にしてください。
+**Claude のアプリ（claude.ai・デスクトップ）**：`skills/wiring-guide/` フォルダを zip にして、設定 → 機能 → Skills からアップロードします。`breadboard.py` と `render_index.py` を動かすため、コード実行を有効にしてください。
 
 **Claude API・Agent SDK**：`skills/wiring-guide/` をカスタムの skill として読み込みます。
 
@@ -29,7 +29,8 @@
 
 - 1 枚のページには、今確かめる所だけを描きます。線の両端を描き、線の表と同じ番号を振ります。
 - 進み具合はリポジトリの外の Markdown 1 つに書きます（既定は `~/.wiring-guide/<repo>/progress.md`）。見本は [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md)。見出しは日本語でも構いません。
-- `render_index.py` がその Markdown から目次のページを作ります。Python 3 だけで動きます。
+- `breadboard.py` は、部品と「何と何をつなぐか」の短い一覧からブレッドボードのページを作ります。穴の場所・線・手順を決め、よくある間違いも調べます。見本は [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json)。
+- `render_index.py` がその Markdown から目次のページを作ります。どちらも Python 3 だけで動きます。
 
 Claude の Artifact の機能があるときはアーティファクトで出します。無いときはローカルの HTML に書いてブラウザで開くので、ファイルを書ける AI ならどれでも動きます。
 

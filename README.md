@@ -17,7 +17,7 @@ The skill is a plain [Agent Skills](https://agentskills.io) folder (`skills/wiri
 
 Or copy `skills/wiring-guide/` into `~/.claude/skills/`.
 
-**Claude apps (claude.ai, desktop)**: zip the `skills/wiring-guide/` folder and upload it under Settings → Capabilities → Skills. Turn on code execution so `render_index.py` can run.
+**Claude apps (claude.ai, desktop)**: zip the `skills/wiring-guide/` folder and upload it under Settings → Capabilities → Skills. Turn on code execution so `breadboard.py` and `render_index.py` can run.
 
 **Claude API and Agent SDK**: load `skills/wiring-guide/` as a custom skill.
 
@@ -29,7 +29,8 @@ Talk about your build as usual ("where does the LED's resistor go?", "check my e
 
 - Each guide draws only what to check now, with both ends of every wire, numbered to match a wire table.
 - Progress lives in one Markdown file outside your repository (default `~/.wiring-guide/<repo>/progress.md`). See [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md).
-- `render_index.py` turns that file into the index page. It needs only Python 3.
+- `breadboard.py` builds a breadboard page from a short list of parts and what connects to what: it picks the holes, adds the wires and steps, and checks for common mistakes. See [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json).
+- `render_index.py` turns that file into the index page. Both need only Python 3.
 
 Pages are published with Claude's Artifact tool when it is available. Elsewhere they are written as local HTML files and opened in a browser, which works with any tool that can write files.
 

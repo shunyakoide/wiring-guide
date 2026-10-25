@@ -1,0 +1,27 @@
+{
+  "lang": "en",
+  "title": "LED on D13 with a button on D2",
+  "eyebrow": "FIRST LED · WIRING",
+  "lead": "An LED through 220 Ω from D13, and a button from D2 to GND.",
+  "board": {"rows": 30, "row1": "left", "near": "a", "rails": "both", "outer": "-"},
+  "boards": [
+    {"id": "uno", "kind": "offboard", "label": "Arduino Uno R3", "short": "Uno", "note": "behind the breadboard, USB left",
+     "side": "far", "usb": "left", "jack": true,
+     "headers": [
+       {"name": "lower header", "at": 2, "pins": ["", "IOREF", "RESET", "3.3V", "5V", "GND", "GND", "VIN"]},
+       {"name": "upper header", "at": 1, "pins": ["SCL", "SDA", "AREF", "GND", "D13", "D12", "D11", "D10", "D9", "D8", null, "D7", "D6", "D5", "D4", "D3", "D2", "D1", "D0"]}
+     ]}
+  ],
+  "parts": [
+    {"id": "R1", "kind": "resistor", "value": "220"},
+    {"id": "LED1", "kind": "led", "color": "red"},
+    {"id": "SW1", "kind": "switch"}
+  ],
+  "connect": [
+    ["-", "uno.GND", "LED1.-", "SW1.2"],
+    ["uno.D13", "R1.1"],
+    ["R1.2", "LED1.+"],
+    ["uno.D2", "SW1.1"]
+  ],
+  "notes": []
+}
