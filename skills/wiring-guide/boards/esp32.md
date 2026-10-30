@@ -1,8 +1,9 @@
 # ESP32 (ESP32-WROOM-32 / DevKitC, 3.3 V)
 
-Pin notes to check before drawing. These apply to the original ESP32 only. ESP32-S2, S3, C3 and C6 have different pins; do not use this file for them.
+Pin notes to check before drawing. These apply to the original ESP32 only. ESP32-S2, S3, C3 and C6 have different pins; do not use this file for them. In a spec, `model` is `esp32-devkitc`; breadboard.py stops above 28 mA on a pin and warns above 20 mA, a margin this skill chose.
 
-- 3.3 V logic. The pins are not 5 V tolerant: a 5 V signal needs a level shifter or a divider.
+- 3.3 V logic. The pins are not 5 V tolerant: a 5 V signal needs a level shifter or a divider. The most a pin accepts is VDD + 0.3 V.
+- A pin sources about 40 mA (at VOH ≥ 2.64 V) and sinks about 28 mA (VOL = 0.495 V), per the DC characteristics table. Stay well below these.
 - GPIO34, 35, 36 (VP), 39 (VN) are input only and have no internal pull-up or pull-down. A button on them needs an external resistor.
 - GPIO6–11 are wired to the module's flash. Never use them.
 - Strapping pins are read at reset, so what is wired to them can stop the board from booting:

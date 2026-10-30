@@ -36,8 +36,23 @@
 
 - 1 枚のページには、今確かめる所だけを描きます。線の両端を描き、線の表と同じ番号を振ります。
 - 進み具合はリポジトリの外の Markdown 1 つに書きます（既定は `~/.wiring-guide/<repo>/progress.md`）。見本は [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md)。見出しは日本語でも構いません。
-- `breadboard.py` は、部品と「何と何をつなぐか」の短い一覧からブレッドボードのページを作ります。穴の場所・線・手順を決め、よくある間違いも調べます。見本は [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json)。
+- `breadboard.py` は、部品と「何と何をつなぐか」の短い一覧からブレッドボードのページを作ります。穴の場所・線・手順を決め、よくある間違いと電気的な危険も調べます。見本は [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json)。
 - `render_index.py` がその Markdown から目次のページを作ります。どちらも Python 3 だけで動きます。
+
+## 安全性
+
+`breadboard.py` はページを描く前に、電源の短絡、3.3 V ピンへの 5 V、LED の抵抗の不足、部品の逆挿し、ピンの電流超過を調べます。危険な回路のページは作りません。skill は電圧やピン配置を `boards/` とデータシートで確かめ、確かめられないときは推測せずに質問します。
+
+検査が見るのは仕様に書かれたことだけで、回路の安全を証明するものではありません。ピン配置、モーター、リレー、合計電流、手描きのページはスクリプトでは調べません。何を調べて何を調べていないかは、答えのたびに伝えます。壊れて困るものに電源を入れる前には、自分でも確かめてください。
+
+## テストと評価
+
+```
+python3 -m unittest discover tests
+claude plugin eval . --ablation none --no-publish --max-cost-usd 10 --allow-tools Bash Write Edit Read
+```
+
+1 つ目は Python だけで動き、スクリプトを調べます。2 つ目はモデルを呼ぶので費用がかかります。それぞれで何が分かり、何が人の確認として残るかは [evals/README.md](evals/README.md) にあります。
 
 Claude の Artifact の機能があるときはアーティファクトで出します。無いときはローカルの HTML に書いてブラウザで開くので、ファイルを書ける AI ならどれでも動きます。
 

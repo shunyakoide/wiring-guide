@@ -36,8 +36,23 @@ Talk about your build as usual ("where does the LED's resistor go?", "check my e
 
 - Each guide draws only what to check now, with both ends of every wire, numbered to match a wire table.
 - Progress lives in one Markdown file outside your repository (default `~/.wiring-guide/<repo>/progress.md`). See [skills/wiring-guide/progress.example.md](skills/wiring-guide/progress.example.md).
-- `breadboard.py` builds a breadboard page from a short list of parts and what connects to what: it picks the holes, adds the wires and steps, and checks for common mistakes. See [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json).
+- `breadboard.py` builds a breadboard page from a short list of parts and what connects to what: it picks the holes, adds the wires and steps, and checks for common mistakes and electrical hazards. See [skills/wiring-guide/spec.example.json](skills/wiring-guide/spec.example.json).
 - `render_index.py` turns that file into the index page. Both need only Python 3.
+
+## Safety
+
+Before it draws a breadboard page, `breadboard.py` checks the nets for shorts, 5 V on 3.3 V pins, missing or too-small LED resistors, reversed parts and pins over their limit. A dangerous circuit gets no page. The skill looks up voltages and pin orders in `boards/` and datasheets, and asks you when it cannot confirm one instead of guessing.
+
+These checks only see what the spec says. They do not prove a circuit safe: pin orders, motors, relays, total current and hand-drawn pages are not checked by the script, and each answer says what was and was not checked. Check it yourself before you power anything you could not afford to lose.
+
+## Tests and evals
+
+```
+python3 -m unittest discover tests
+claude plugin eval . --ablation none --no-publish --max-cost-usd 10 --allow-tools Bash Write Edit Read
+```
+
+The first needs only Python and covers the scripts. The second calls a model and costs money. [evals/README.md](evals/README.md) says what each proves and what still needs a person.
 
 Pages are published with Claude's Artifact tool when it is available. Elsewhere they are written as local HTML files and opened in a browser, which works with any tool that can write files.
 

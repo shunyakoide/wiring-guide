@@ -13,6 +13,7 @@ A Claude Code plugin with one skill: `skills/wiring-guide/`.
 - `skills/wiring-guide/boards/`: pin notes per board. Every fact needs a source link (datasheet or official docs).
 - `skills/wiring-guide/sketches/`: small Arduino sketches to try after wiring. Arduino core libraries only.
 - `skills/wiring-guide/progress.example.md`: sample progress file.
+- `tests/`: unit tests of the two scripts. `evals/`: cases for `claude plugin eval` (model calls, costs money) and the manual review sheet; `evals/README.md` says what each one proves.
 - `docs/`: README screenshots, taken from `spec.example.json` in light and dark. Retake them when the page's look changes.
 - README Acknowledgements: credit any idea taken from another project there, in both READMEs.
 
@@ -20,10 +21,12 @@ A Claude Code plugin with one skill: `skills/wiring-guide/`.
 ```
 python3 skills/wiring-guide/render_index.py skills/wiring-guide/progress.example.md /tmp/index.html "Example build log"
 python3 skills/wiring-guide/breadboard.py skills/wiring-guide/spec.example.json /tmp/example.html
+python3 -m unittest discover tests
 ```
 
 ## Rules
 - English in SKILL.md, README.md and code, except Japanese trigger phrases in the description. Japanese prose only in README.ja.md.
 - Do not add dependencies.
+- A new electrical rule in breadboard.py gets a test, a row in the table in SKILL.md's "Safety", and, for a board fact, a source in boards/.
 
 計画・調査メモはこのリポジトリに置かない(作者の手元の別リポジトリで管理している)。

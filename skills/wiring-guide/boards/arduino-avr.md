@@ -1,6 +1,6 @@
 # Arduino Uno R3, Nano, Mega 2560 (AVR, 5 V)
 
-Pin notes to check before drawing. Confirm against the sources below; clones can differ.
+Pin notes to check before drawing. Confirm against the sources below; clones can differ. In a spec, `model` is `uno-r3`, `nano` or `mega2560`; breadboard.py stops above 40 mA on a pin (the absolute maximum of both chips) and warns above 20 mA (the current their output levels are specified at).
 
 ## Uno R3
 - Upper header, counted from the USB end: SCL, SDA, AREF, GND, D13, D12, D11, D10, D9, D8. Then a gap, then D7 … D0.
@@ -24,4 +24,5 @@ Pin notes to check before drawing. Confirm against the sources below; clones can
 - Arduino Uno Rev3: https://docs.arduino.cc/hardware/uno-rev3/
 - Arduino Nano: https://docs.arduino.cc/hardware/nano/
 - Arduino Mega 2560 Rev3: https://docs.arduino.cc/hardware/mega-2560/
-- ATmega328P (electrical characteristics, I/O pin current): https://www.microchip.com/en-us/product/atmega328p
+- ATmega328P datasheet (DC current per I/O pin 40 mA, output levels at 20 mA): https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf
+- ATmega2560 datasheet (the same two values, for the Mega): https://ww1.microchip.com/downloads/en/devicedoc/atmel-2549-8-bit-avr-microcontroller-atmega640-1280-1281-2560-2561_datasheet.pdf

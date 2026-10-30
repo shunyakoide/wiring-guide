@@ -5,7 +5,7 @@
   "lead": "An LED through 220 Ω from D13, and a button from D2 to GND.",
   "board": {"rows": 30, "row1": "left", "near": "a", "rails": "both", "outer": "-"},
   "boards": [
-    {"id": "uno", "kind": "offboard", "label": "Arduino Uno R3", "short": "Uno", "note": "behind the breadboard, USB left",
+    {"id": "uno", "kind": "offboard", "model": "uno-r3", "label": "Arduino Uno R3", "short": "Uno", "note": "behind the breadboard, USB left",
      "side": "far", "usb": "left", "jack": true,
      "headers": [
        {"name": "lower header", "at": 2, "pins": ["", "IOREF", "RESET", "3.3V", "5V", "GND", "GND", "VIN"]},

@@ -4,9 +4,14 @@
     python3 breadboard.py spec.json out.html
 
 Draws the board, parts and wires, writes the steps, the table and a close-up of each
-resistor value into a copy of template.html, then prints every net and any mistakes it
-finds (a hole that does not exist, two things in one hole, both legs in one strip, ...).
-Exits 1 if it found errors; the page is written anyway so you can look at it.
+resistor value into a copy of template.html, then prints every net, what it checked, and
+any mistakes it finds (a hole that does not exist, both legs in one strip, a supply
+shorted to GND, 5 V on a 3.3 V pin, an LED without a resistor, ...).
+
+warning: the page is written; tell the user or confirm it against the datasheet.
+ERROR:   no page is written and it exits 1. With "as_built": true the spec records wiring
+         the user already built, so a fault is the finding: the page is written with a
+         do-not-power banner, still exit 1. A spec that cannot be drawn never gets a page.
 See spec.example.json for the format. Python 3 standard library only.
 """
 import html, json, math, re, sys
@@ -35,6 +40,7 @@ WORDS = {
         "t_part2": "{id} ({value}) in {a} and {b}.", "t_led": "{id}: long leg (+) in {a}, short leg in {b}.",
         "t_polar": "{id}: + leg in {a}, − leg in {b}.", "t_switch": "{id} in {holes}: the two legs farther apart go on one number.",
         "t_multi": "{id}: {legs}.", "t_dip": "{id} across the gap, notch to the left, pin 1 in {pin1}.", "t_wire": "Wire {n}: {a} → {b}.",
+        "unsafe": "Do not power this up. The drawing shows the wiring as it is now, and it has a fault.",
     },
     "ja": {
         "where": "どこに挿すか", "table": "線と部品", "colors": "抵抗の色の読み方",
@@ -52,6 +58,7 @@ WORDS = {
         "t_part2": "{id}（{value}）を {a} と {b} に。", "t_led": "{id}：長い足（＋）を {a}、短い足を {b} に。",
         "t_polar": "{id}：＋の足を {a}、−の足を {b} に。", "t_switch": "{id} を {holes} に。足の間が広い 2 本を同じ番号に。",
         "t_multi": "{id} の足を {legs} に。", "t_dip": "{id} を溝をまたいで、切り欠きを左、1 番ピンを {pin1} に。", "t_wire": "線 {n}：{a} → {b}。",
+        "unsafe": "電源を入れないでください。この図は今の配線で、不具合があります。",
     },
 }
 WIRE = {"red": "var(--red)", "black": "var(--w-blk)", "green": "var(--w-grn)", "yellow": "var(--w-yel)",
@@ -59,11 +66,105 @@ WIRE = {"red": "var(--red)", "black": "var(--w-blk)", "green": "var(--w-grn)", "
 LED = {"red": "#e5484d", "yellow": "#f5c518", "green": "#30a46c", "blue": "#3e7bfa", "white": "#f2f4f6", "orange": "#f08c00"}
 TWO_LEG = ("resistor", "led", "cap", "buzzer", "diode")
 
-errors, warnings = [], []
+# What the safety checks know about a board. Sources are in boards/*.md; a spec may override any key.
+# logic_v: GPIO level. power: supply pins in volts, None for an input with no fixed voltage.
+# pin_ma: [warn above, stop above]. forbid / avoid: pins and why.
+BOARD_FACTS = {
+    "uno-r3": {"logic_v": 5, "power": {"5V": 5, "3.3V": 3.3, "IOREF": 5, "VIN": None}, "pin_ma": [20, 40],
+               "avoid": {"D0": "USB serial, can block uploads", "D1": "USB serial, can block uploads"}},
+    "nano": {"logic_v": 5, "power": {"5V": 5, "3V3": 3.3, "VIN": None}, "pin_ma": [20, 40],
+             "avoid": {"RX0": "USB serial, can block uploads", "TX1": "USB serial, can block uploads"}},
+    "mega2560": {"logic_v": 5, "power": {"5V": 5, "3.3V": 3.3, "IOREF": 5, "VIN": None}, "pin_ma": [20, 40],
+                 "avoid": {"D0": "USB serial, can block uploads", "D1": "USB serial, can block uploads"}},
+    "pico": {"logic_v": 3.3, "power": {"3V3": 3.3, "3V3(OUT)": 3.3, "VBUS": 5, "VSYS": 5}, "pin_ma": [4, 12]},
+    "esp32-devkitc": {"logic_v": 3.3, "power": {"3V3": 3.3, "5V": 5}, "pin_ma": [20, 28],
+                      "forbid": {p: "wired to the module's flash" for p in ("CLK", "CMD", "D0", "D1", "D2", "D3")},
+                      "avoid": {"IO0": "strapping pin", "IO2": "strapping pin", "IO5": "strapping pin", "IO12": "strapping pin", "IO15": "strapping pin",
+                                "RX": "USB serial", "TX": "USB serial"}},
+}
+BOARD_KINDS = (None, "offboard")
+PART_KINDS = TWO_LEG + ("switch", "dip", "pot", "rgb", "module", "part")
+GND_PIN = re.compile(r"^([ADP]?GND\d*|GROUND|G|VSS|0V|-)$", re.I)
+SUPPLY_LEG = re.compile(r"^(A?VCC\d*|DVCC|A?VDD\d*|VIN|VS|VM|V|VBAT|VBUS|VSYS|V\+|\+|PWR|POWER|\+?\d+(\.\d+)?V|\d+V\d+)$", re.I)
+CATHODE_LEG = ("-", "K", "C", "cathode")
+ANODE_LEG = ("+", "A", "anode")
+RGB_COMMON = re.compile(r"^(K|A|C|COM|COMMON|GND|VCC|\+|-)$", re.I)
+# Defaults of this skill, not from a datasheet, and printed as assumed: a part's vf and max_ma replace them.
+LED_WARN_MA, LED_STOP_MA = 20, 30
+VF_LOW = {"red": 1.8, "orange": 1.8, "yellow": 1.8, "green": 1.8, "blue": 2.8, "white": 2.8}   # low end, so the current is not understated
+NOT_CHECKED = ("pin orders copied from a datasheet, breadboard rails that are split, supply capacity and total current, "
+               "flyback diodes, motors, relays and servos, parts without declared limits, whether a dashed fix is safe, what firmware does with the pins")
+
+errors, warnings, fatal, checks = [], [], [], []
 esc = html.escape
 
 
 def err(msg): errors.append(msg)
+
+
+def stop(msg):
+    """A spec that cannot be drawn: no page, even for as_built."""
+    errors.append(msg)
+    fatal.append(msg)
+
+
+def pin_list(d):
+    if d.get("kind") == "offboard":
+        return [nm for h in d["headers"] for nm in h["pins"] if nm]
+    return [nm for names in d["pins"].values() for nm in names]
+
+
+def facts_of(d):
+    return {**BOARD_FACTS.get(d.get("model"), {}), **d}
+
+
+def validate(spec):
+    """Stop at the boundary: everything the planner would otherwise drop or crash on."""
+    b = spec.get("board", {})
+    if not isinstance(b.get("rows"), int) or b["rows"] < 1:
+        return stop("board: give rows (30 half, 63 full, 17 mini)")
+    for key, allowed in (("near", "aj"), ("row1", ("left", "right")), ("rails", ("both", "far", "near", "none")), ("outer", "-+")):
+        if key in b and b[key] not in allowed:
+            stop(f'board: {key} "{b[key]}" is not one of {", ".join(allowed)}')
+    for w in spec.get("wires", []):
+        if w.get("dashed") and not spec.get("as_built"):
+            stop(f'wire {w.get("n")}: a dashed fix belongs on an "as_built" page')
+    boards, parts = {}, {}
+    for d in spec.get("boards", []):
+        who = d.get("id", "?")
+        if d.get("kind") not in BOARD_KINDS:
+            stop(f'{who}: board kind "{d["kind"]}" is not supported (leave it out for a board in the breadboard, or use "offboard")')
+        elif not all(k in d for k in (("headers",) if d.get("kind") == "offboard" else ("span", "pins"))):
+            stop(f"{who}: its pins are missing (see The spec in SKILL.md)")
+        elif "logic_v" not in facts_of(d) or "power" not in facts_of(d):
+            stop(f'{who}: model "{d.get("model")}" is not supported: choose one of {", ".join(BOARD_FACTS)}, '
+                 'or give logic_v and power from its datasheet; ask the user if you cannot find them')
+        else:
+            boards[who] = d
+    for p in spec.get("parts", []):
+        who = p.get("id", "?")
+        if p.get("kind") not in PART_KINDS:
+            stop(f'{who}: part kind "{p.get("kind")}" is not supported ({", ".join(PART_KINDS)})')
+        elif who in parts:
+            stop(f"{who}: two parts have this id")
+        else:
+            parts[who] = p
+    for group in spec.get("connect", []):
+        for e in group:
+            if e in ("+", "-", "GND"):
+                continue
+            who, _, leg = e.partition(".")
+            if who in boards:
+                want, _, nth = leg.partition("#")
+                if pin_list(boards[who]).count(want) < int(nth or 1):
+                    stop(f"connect: {e}: {who} has no such pin")
+            elif who in parts:
+                if "names" not in parts[who] and parts[who]["kind"] in ("rgb", "module", "part"):
+                    stop(f"{who}: give the names of its legs")
+                elif leg not in leg_names(parts[who]):
+                    stop(f"connect: {e}: {who} has legs {', '.join(leg_names(parts[who]))}")
+            else:
+                stop(f"connect: {e}: nothing has the id {who}")
 
 
 # ---------- geometry ----------
@@ -135,6 +236,7 @@ class Page:
         self.items = {}          # id -> svg string
         self.rows = {}           # id -> table row cells
         self.covered = {}        # hole key -> module id
+        self.reported = set()    # parts add_part already called shorted, so the net check does not repeat it
         self.must = set()        # part legs that should connect to something
         self.boxes = []          # label boxes placed so far (x, y, w, h)
 
@@ -168,31 +270,31 @@ class Page:
         if m:
             n, l = int(m[1]), m[2]
             if not 1 <= n <= self.b.rows:
-                err(f"{who}: hole {ref} does not exist (the board has numbers 1–{self.b.rows})")
+                stop(f"{who}: hole {ref} does not exist (the board has numbers 1–{self.b.rows})")
             return ("h", n, l), (self.b.x(n), self.b.ly[l])
         m = RAIL.match(ref)
         if m:
             side = "far" if m[1] == "F" else "near"
             sign, n = m[2], int(m[3])
             if not self.b.rails[side]:
-                err(f"{who}: {ref}: this board has no {side} rail")
+                stop(f"{who}: {ref}: this board has no {side} rail")
                 return ("r", side, sign, n), (self.b.x(n), self.b.top)
             pos = "outer" if self.b.sign["outer"] == sign else "inner"
             if not 1 <= n <= self.b.rows:
-                err(f"{who}: rail hole {ref} does not exist")
+                stop(f"{who}: rail hole {ref} does not exist")
             return ("r", side, sign, n), (self.b.x(n), self.b.ry[(side, pos)])
         if "." in ref:
             bid, pin = ref.split(".", 1)
             ob = self.boards.get(bid)
             if not ob:
-                err(f"{who}: {ref}: no board with id {bid}")
+                stop(f"{who}: {ref}: no board with id {bid}")
                 return ("p", bid, pin), (0, 0)
             hit = ob["find"](pin)
             if hit is None:
-                err(f"{who}: {ref}: {bid} has no pin {pin}")
+                stop(f"{who}: {ref}: {bid} has no pin {pin}")
                 return ("p", bid, pin), (0, 0)
             return hit
-        err(f"{who}: cannot read '{ref}' (use 12e, F-12, N+3 or board.pin)")
+        stop(f"{who}: cannot read '{ref}' (use 12e, F-12, N+3 or board.pin)")
         return ("x", ref), (0, 0)
 
     def take(self, key, who):
@@ -545,6 +647,7 @@ class Page:
             self.must.add(f"{pid}.{nm or i + 1}")
         if kind in TWO_LEG and len(keys) == 2:
             if self.node(keys[0][1]) == self.node(keys[1][1]):
+                self.reported.add(pid)
                 err(f"{pid}: both legs are in the same strip ({self.name(keys[0][1])}, {self.name(keys[1][1])}), so it is shorted out")
             (x1, y1), (x2, y2) = keys[0][2], keys[1][2]
             if x1 != x2 and y1 != y2:
@@ -553,6 +656,7 @@ class Page:
                 if keys[0][1][0] == "h" and keys[1][1][0] == "h" and self.b.side_of(keys[0][1][2]) == self.b.side_of(keys[1][1][2]) and math.dist((x1, y1), (x2, y2)) < 4 * P:
                     err(f"{pid}: legs only {round(math.dist((x1, y1), (x2, y2)) / P)} holes apart; leave at least 3 holes between them")
         if kind == "pot" and len(keys) == 3 and keys[1][1][0] == "r":
+            self.reported.add(pid)
             err(f"{pid}: the middle leg (wiper) is on a rail")
         pts = [xy for _, _, xy in keys]
         if len({self.b.side_of(k[2]) for _, k, _ in keys if k[0] == "h"}) > 1:
@@ -697,7 +801,8 @@ class Page:
         for k in (a, c):
             self.take(k, f"wire {n}")
             self.member(k, f"wire {n}")
-        self.join(self.node(a), self.node(c))
+        if not d.get("dashed"):                                 # a fix not made yet: the checks look at the wiring as it is now
+            self.join(self.node(a), self.node(c))
         if self.node(a) == self.node(c):
             err(f"wire {n}: both ends are in the same strip or rail, so it does nothing")
         col = WIRE.get(d.get("color", "blue"), d.get("color", "blue"))
@@ -809,6 +914,7 @@ class Page:
         for names in nets.values():
             if len(names) == 1 and names[0] in self.must:
                 warnings.append(f"{names[0]} connects to nothing")
+        Safety(self, nets).run()
 
         # svg
         body = [self.svg_board(), self.svg_boards_off(), self.svg_straddlers()]
@@ -867,7 +973,8 @@ class Page:
         notes = "".join(f'<p class="note">{n}</p>' for n in s.get("notes", []))
         th = "".join(f"<th>{esc(t)}</th>" for t in w["th"])
         sec = [f'<header><div class="eyebrow">{esc(s.get("eyebrow", ""))}</div><h1>{esc(s["title"])}</h1>'
-               f'<p class="lead">{s.get("lead", "")}</p></header>',
+               f'<p class="lead">{s.get("lead", "")}</p></header>'
+               + (f'<p class="note">{esc(w["unsafe"])}</p>' if s.get("as_built") and errors else ""),
                f'<section><h2>{esc(w["where"])}</h2><p>{howto}</p><div class="figure">{svg}</div>'
                + (f'<p>{s["before"]}</p>' if s.get("before") else "") + (f"<ol>{lis}</ol>" if lis else "") + "</section>",
                f'<section><h2>{esc(w["table"])}</h2><div class="tw"><table class="tbl"><thead><tr>{th}</tr></thead><tbody>{"".join(trs)}</tbody></table></div>{jtxt}{notes}</section>']
@@ -956,6 +1063,279 @@ class Page:
         return x, y
 
 
+# ---------- electrical checks ----------
+# Worked out from the nets the page really draws. Only rules that need no datasheet beyond the spec's facts.
+
+def fmt_volts(vs):
+    return " and ".join(f"{v:g} V" for v in sorted(vs))
+
+
+def label(pin):
+    return f"{pin[0]}.{pin[1]}"
+
+
+class Safety:
+    def __init__(self, page, nets):
+        self.page, self.nets = page, nets
+        self.parts = {p["id"]: p for p in page.s.get("parts", [])}
+        self.leg, self.pins = {}, {}                            # "R1.1" -> net; net -> [(board, pin)]
+        self.edges, self.load = {}, {}                          # net -> [(net, ohms)]; pin -> [(mA, part)]
+        for key, names in page.members.items():
+            for nm in names:
+                who, _, rest = nm.partition(".")
+                if who in page.boards:
+                    self.pins.setdefault(page.find(key), []).append((who, rest))
+                elif who in self.parts:
+                    self.leg[f"{who}.{rest.split()[-1]}"] = page.find(key)
+        for pid, p in self.parts.items():                       # two-leg parts placed with named legs: 1 is the anode side, as drawn
+            if p["kind"] in TWO_LEG:
+                for i, l in enumerate(p.get("legs", [])):
+                    if isinstance(l, list):
+                        order = 2 if l[0] in CATHODE_LEG else 1 if l[0] in ANODE_LEG else i + 1
+                        self.leg[f"{pid}.{order}"] = self.leg[f"{pid}.{l[0]}"]
+
+    def facts(self, pin):
+        return facts_of(self.page.boards[pin[0]])
+
+    def volts(self, net):
+        """{pin: volts} for the supply and GND pins on a net."""
+        out = {}
+        for pin in self.pins.get(net, []):
+            power = self.facts(pin)["power"]
+            if GND_PIN.match(pin[1]):
+                out[pin] = 0
+            elif pin[1] in power:
+                out[pin] = power[pin[1]]
+        return out
+
+    def known(self, net):
+        return {v for v in self.volts(net).values() if v is not None}
+
+    def signals(self, net):
+        return [p for p in self.pins.get(net, []) if not GND_PIN.match(p[1]) and p[1] not in self.facts(p)["power"]]
+
+    def logic(self, pin):
+        return self.facts(pin)["logic_v"]
+
+    def size(self, net):
+        return sum(len(names) for key, names in self.page.members.items() if self.page.find(key) == net)
+
+    def two_legs(self, pid):
+        return self.leg.get(f"{pid}.1"), self.leg.get(f"{pid}.2")
+
+    def run(self):
+        self.check_nets()
+        self.check_rails()
+        self.check_switches()
+        self.build_edges()
+        for pid, p in self.parts.items():
+            a, c = self.two_legs(pid)
+            if p["kind"] in TWO_LEG + ("switch",) and a is not None and a == c and pid not in self.page.reported:
+                err(f"{pid}: both legs are on one net ({', '.join(dict.fromkeys(self.nets[a]))}), so it is shorted out")
+            if p["kind"] == "led" and a is not None and c is not None and a != c:
+                self.check_led(pid, p, a, c)
+            if p["kind"] == "rgb":
+                self.check_rgb(pid, p)
+            if p["kind"] == "pot":
+                self.check_pot(pid, p)
+            if p["kind"] in ("cap", "diode") and a is not None and c is not None:
+                self.check_polarity(pid, p, a, c)
+            self.check_draw(pid, p)
+            if p["kind"] in ("module", "dip", "part"):
+                self.check_powered(pid, p)
+        self.check_pin_loads()
+
+    def check_nets(self):
+        for net in {self.page.find(k) for k in self.page.members}:
+            v, known, used = self.volts(net), self.known(net), self.size(net) > 1
+            names = ", ".join(label(p) for p in v)
+            if len(known) > 1:
+                err(f"{names} are joined: {fmt_volts(known)} shorted together")
+            if None in v.values() and used:
+                warnings.append(f"{names}: a power input with no fixed voltage; confirm the supply against the board's datasheet")
+            if len({p[0] for p, x in v.items() if x}) > 1:
+                warnings.append(f"{names}: two boards' supplies are tied together; one can back-feed the other")
+            for pin in self.pins.get(net, []) if used else ():
+                f = self.facts(pin)
+                if SUPPLY_LEG.match(pin[1]) and pin[1] not in f["power"]:
+                    err(f"{label(pin)} looks like a supply pin, but power does not give its voltage: take it from the board's datasheet")
+                if pin[1] in f.get("forbid", {}):
+                    err(f"{label(pin)}: do not use it: {f['forbid'][pin[1]]}")
+                if pin[1] in f.get("avoid", {}):
+                    warnings.append(f"{label(pin)}: {f['avoid'][pin[1]]}; pick another pin if you can")
+            for p in self.signals(net):
+                hi = max(known | {self.logic(q) for q in self.signals(net)})
+                if hi > self.logic(p):
+                    err(f"{label(p)} is a {self.logic(p):g} V pin, and this net has {hi:g} V on it: it can damage the pin (use a level shifter or a divider)")
+                elif known:
+                    warnings.append(f"{label(p)} is tied straight to {fmt_volts(known)}: driving it as an output the other way is a short")
+
+    def check_rails(self):
+        for node in list(self.page.parent):
+            if node[0] == "rail":
+                vs = self.known(self.page.find(node))
+                if node[2] == "-" and any(vs):
+                    err(f"the − rail has {fmt_volts(vs)} on it")
+                if node[2] == "+" and 0 in vs:
+                    err("the + rail is joined to GND")
+
+    def check_switches(self):
+        """Join the nets of every switch, as if all were pressed at once."""
+        groups = []
+        for pid, p in self.parts.items():
+            a, c = self.two_legs(pid)
+            if p["kind"] == "switch" and a is not None and c is not None and a != c:
+                touching = [g for g in groups if g["nets"] & {a, c}]
+                groups = [g for g in groups if g not in touching]
+                groups.append({"nets": {a, c}.union(*(g["nets"] for g in touching)), "ids": sum((g["ids"] for g in touching), []) + [pid]})
+        for g in groups:
+            ids = ", ".join(g["ids"])
+            verb = "pressing it" if len(g["ids"]) == 1 else "pressing them all"
+            both = set().union(*(self.known(n) for n in g["nets"]))
+            if len(both) > 1:
+                err(f"{ids}: {verb} joins {fmt_volts(both)}: a short")
+            for q in (q for n in g["nets"] for q in self.signals(n)):
+                if both and max(both) > self.logic(q):
+                    err(f"{ids}: {verb} puts {max(both):g} V on {label(q)}, a {self.logic(q):g} V pin")
+
+    def build_edges(self):
+        for pid, p in self.parts.items():
+            a, c = self.two_legs(pid)
+            if a is None or c is None or a == c:
+                continue
+            ohm = ohms(p.get("value", "")) if p["kind"] == "resistor" else 0 if p["kind"] == "switch" else None
+            if ohm is None:
+                continue
+            self.edges.setdefault(a, []).append((c, ohm))
+            self.edges.setdefault(c, []).append((a, ohm))
+            for x, y in ((a, c), (c, a)) if p["kind"] == "resistor" else ():
+                for q in self.signals(x):
+                    if self.known(y) and max(self.known(y)) > self.logic(q):
+                        warnings.append(f"{pid} pulls {label(q)}, a {self.logic(q):g} V pin, up to {max(self.known(y)):g} V: fine only as part of a divider that you have worked out")
+
+    def reach(self, start, cut):
+        """net -> lowest series ohms, not crossing the part itself."""
+        dist, todo = {start: 0}, [start]
+        while todo:
+            n = todo.pop()
+            for m, r in self.edges.get(n, []):
+                if m != cut and dist[n] + r < dist.get(m, math.inf):
+                    dist[m] = dist[n] + r
+                    todo.append(m)
+        return dist
+
+    def check_led(self, pid, p, anode, cathode):
+        up, down = self.reach(anode, cathode), self.reach(cathode, anode)
+        src = [(r, q) for n, r in up.items() for q in ([(x, v) for x, v in self.volts(n).items() if v] + [(s, self.logic(s)) for s in self.signals(n)])]
+        snk = [(r, q) for n, r in down.items() for q in ([x for x, v in self.volts(n).items() if v == 0] + self.signals(n))]
+        if not src or not snk:
+            if any(0 in self.known(n) for n in up) and not src:
+                err(f"{pid} is backwards: its + leg goes to GND")
+            elif any(any(self.known(n)) for n in down) and not snk:
+                err(f"{pid} is backwards: its − leg goes to a supply")
+            else:
+                warnings.append(f"{pid}: no complete path from a supply or pin to GND or a pin, so its current was not checked")
+            return
+        low = {q for n in down for q in self.signals(n)}
+        for hi, q in {(v, q) for _, (_, v) in src for q in low if v > self.logic(q)}:
+            err(f"{pid} joins {hi:g} V to {label(q)}, a {self.logic(q):g} V pin: when the pin is not driven low it can be pushed above its limit")
+        vf = p.get("vf", VF_LOW.get(p.get("color", "red"), 1.8))
+        (ra, (who, v)), (rc, sink) = max(((s, t) for s in src for t in snk), key=lambda st: (st[0][1][1] - vf) / max(st[0][0] + st[1][0], 1e-9))
+        if ra + rc == 0:
+            err(f"{pid} has no resistor between {label(who)} ({v:g} V) and {label(sink)}: the current is limited by nothing")
+            return
+        ma = (v - vf) / (ra + rc) * 1000
+        limit = p.get("max_ma", LED_STOP_MA)
+        checks.append(f"{pid}: about {ma:.1f} mA ({fmt_ohm(ra + rc)}, {v:g} V from {label(who)}, Vf {vf:g} V{'' if 'vf' in p else ' assumed'}, limit {limit:g} mA{'' if 'max_ma' in p else ' assumed'})")
+        if ma <= 0:
+            warnings.append(f"{pid}: {v:g} V is not above its Vf of {vf:g} V, so it may not light")
+        if ma > limit:
+            err(f"{pid}: about {ma:.0f} mA, over {limit:g} mA: use a bigger resistor")
+        elif ma > LED_WARN_MA and "max_ma" not in p:
+            warnings.append(f"{pid}: about {ma:.0f} mA, over the usual {LED_WARN_MA} mA; check the LED's datasheet")
+        for q in (who, sink):
+            if q in low or q in {s for _, (s, _) in src if s[1] not in self.facts(s)["power"]}:
+                self.load.setdefault(q, []).append((max(ma, 0), pid))
+
+    def check_rgb(self, pid, p):
+        for l in p.get("legs", []):
+            n = self.leg.get(f"{pid}.{l[0]}") if isinstance(l, list) else None
+            if n is not None and not RGB_COMMON.match(l[0]) and (self.signals(n) or any(self.known(n))):
+                err(f"{pid}.{l[0]} has no resistor: give each colour its own")
+
+    def check_pot(self, pid, p):
+        ends = [l[0] if isinstance(l, list) else str(i + 1) for i, l in enumerate(p.get("legs", []))]
+        if len(ends) == 3 and pid not in self.page.reported:
+            w = self.known(self.leg.get(f"{pid}.{ends[1]}"))
+            if w and any(self.known(self.leg.get(f"{pid}.{e}")) - w for e in (ends[0], ends[2])):
+                err(f"{pid}: the middle leg (wiper) is on a supply: at one end of its travel it shorts the supply")
+
+    def check_polarity(self, pid, p, plus, minus):
+        a, c = self.known(plus), self.known(minus)
+        if a and c and p["kind"] == "cap" and p.get("polar") and max(a) < min(c):
+            err(f"{pid} is backwards: its + leg is at {fmt_volts(a)}, its − leg at {fmt_volts(c)}")
+        if a and c and p["kind"] == "diode" and min(a) > max(c):
+            err(f"{pid} conducts straight across the supply: anode {fmt_volts(a)}, cathode {fmt_volts(c)}")
+
+    def check_draw(self, pid, p):
+        on_pins = [q for k, n in self.leg.items() if k.startswith(pid + ".") for q in self.signals(n)]
+        if p.get("draw_ma") is not None:
+            for q in on_pins:
+                self.load.setdefault(q, []).append((p["draw_ma"], pid))
+        elif p["kind"] == "buzzer" and on_pins:
+            warnings.append(f"{pid}: a coil buzzer (tens of ohms) can overload a pin; read its datasheet and give draw_ma")
+
+    def check_pin_loads(self):
+        for q, items in self.load.items():
+            limits = self.facts(q).get("pin_ma")
+            total = sum(m for m, _ in items)
+            who = ", ".join(i for _, i in items)
+            if not limits:
+                warnings.append(f"{label(q)}: its current limit is not given, so {total:.1f} mA for {who} was not checked")
+            elif total > limits[1]:
+                err(f"{label(q)}: {total:.1f} mA for {who} is over the pin's {limits[1]} mA limit")
+            elif total > limits[0]:
+                warnings.append(f"{label(q)}: {total:.1f} mA for {who} is over the pin's {limits[0]} mA working level")
+
+    def check_powered(self, pid, p):
+        """A module, chip or other part: its supply range, its polarity, and the levels on its signal pins."""
+        mine = {k.split(".", 1)[1]: n for k, n in self.leg.items() if k.startswith(pid + ".")}
+        supply = p.get("supply", [m for m in mine if SUPPLY_LEG.match(m)])
+        vcc = p.get("vcc")
+        if supply and not vcc:
+            err(f"{pid}: its supply range is not given: read its datasheet and set vcc [min, max], or ask the user")
+        if not supply and "supply" not in p:
+            msg = f"{pid}: no leg is recognised as its supply, so its voltages were not checked: name it in supply, or set supply [] if it has none"
+            err(msg) if p["kind"] in ("module", "dip") else warnings.append(msg)
+        fed = max((v for m in supply for v in self.known(mine[m])), default=None)
+        for m in supply:
+            for v in self.known(mine[m]):
+                if v == 0:
+                    err(f"{pid}.{m} is on GND: the part is powered backwards")
+                elif vcc and v > vcc[1]:
+                    err(f"{pid}.{m} gets {v:g} V, over its {vcc[1]:g} V maximum")
+                elif vcc and v < vcc[0]:
+                    warnings.append(f"{pid}.{m} gets {v:g} V, under its {vcc[0]:g} V minimum, so it may not work")
+        io_max = p.get("io_max", vcc[1] if vcc else None)
+        for m, n in mine.items():
+            if m in supply:
+                continue
+            if GND_PIN.match(m):
+                if any(self.known(n)):
+                    err(f"{pid}.{m} is on {max(self.known(n)):g} V: the part is powered backwards")
+                continue
+            for q in self.signals(n):
+                out = p.get("out_v", {}).get(m)
+                if io_max is not None and self.logic(q) > io_max:
+                    err(f"{label(q)} drives {pid}.{m} at {self.logic(q):g} V, over its {io_max:g} V maximum (use a level shifter)")
+                if out is not None and out > self.logic(q):
+                    err(f"{pid}.{m} outputs {out:g} V into {label(q)}, a {self.logic(q):g} V pin (use a level shifter or a divider)")
+                if out is None and fed is not None and fed > self.logic(q):
+                    warnings.append(f"{pid}.{m} is powered at {fed:g} V and wired straight to {label(q)}, a {self.logic(q):g} V pin: confirm its output level and set out_v")
+            if io_max is not None and self.known(n) and max(self.known(n)) > io_max:
+                err(f"{pid}.{m} has {max(self.known(n)):g} V on it, over its {io_max:g} V maximum")
+
+
 def usb_port(edge, cy, side, h, depth):
     """A metal USB socket sticking out of a board's edge, labelled, so the user can match the board's direction."""
     sx = edge - depth + 6 if side == "left" else edge - 6
@@ -968,8 +1348,8 @@ def usb_port(edge, cy, side, h, depth):
 # ---------- resistor values ----------
 
 def ohms(v):
-    m = re.match(r"^\s*([\d.]+)\s*([kKmM]?)", str(v))
-    if not m:
+    m = re.fullmatch(r"\s*(\d+\.?\d*)\s*([kKmM]?)\s*(Ω|ohms?|R)?\s*", str(v))
+    if not m:                                                   # "4k7" must not read as 4 kΩ
         return None
     return float(m[1]) * {"": 1, "k": 1e3, "K": 1e3, "m": 1e6, "M": 1e6}[m[2]]
 
@@ -1014,6 +1394,8 @@ def leg_names(p):
     k = p["kind"]
     if k in ("led", "buzzer", "diode") or (k == "cap" and p.get("polar")):
         return ["+", "-"]
+    if k == "dip" and "names" not in p:
+        return [str(i + 1) for i in range(p["pins"])]
     if k in ("resistor", "cap", "switch"):
         return ["1", "2"]
     if k == "pot":
@@ -1319,10 +1701,10 @@ def _plan(spec, gap):
             elif bid in strad:
                 d = strad[bid]
                 pin = e.split(".", 1)[1]
-                spots = [(d["span"][0] + i, b.side_of(l)) for l, names in d["pins"].items() for i, nm in enumerate(names) if nm == pin]
-                if spots:
-                    terms.append(("strip", spots[0]))
-                    label = label or pin
+                want, _, nth = pin.partition("#")
+                spots = [(d["span"][0] + i, b.side_of(l)) for l, names in d["pins"].items() for i, nm in enumerate(names) if nm == want]
+                terms.append(("strip", spots[int(nth or 1) - 1]))
+                label = label or want
             elif e in leg_hole:
                 h = leg_hole[e]
                 st = strip_of(h)
@@ -1408,16 +1790,28 @@ def _num(end, pin_number):
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
-    spec = plan(json.loads(Path(sys.argv[1]).read_text()))
-    template = (Path(__file__).parent / "template.html").read_text()
-    page = Page(spec)
-    out, nets = page.render(template)
-    Path(sys.argv[2]).write_text(out)
-    print(f"wrote {sys.argv[2]}")
+    nets, out, as_built = {}, None, False
+    try:
+        spec = json.loads(Path(sys.argv[1]).read_text())
+        as_built = bool(spec.get("as_built"))
+        validate(spec)
+        if not fatal:
+            template = (Path(__file__).parent / "template.html").read_text()
+            out, nets = Page(plan(spec)).render(template)
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError) as e:
+        stop(f"the spec is malformed: {e!r} (see The spec in SKILL.md)")
+    if out and not fatal and (as_built or not errors):
+        Path(sys.argv[2]).write_text(out)
+        print(f"wrote {sys.argv[2]}")
+    else:
+        print(f"no page written; anything already at {sys.argv[2]} is out of date")
     print("nets:")
     for names in sorted(nets.values(), key=lambda n: sorted(n)[0]):
         if len(names) > 1:
             print("  " + ", ".join(dict.fromkeys(names)))
+    for c in checks:
+        print("checked: " + c)
+    print("not checked by this script: " + NOT_CHECKED)
     for w_ in warnings:
         print("warning: " + w_)
     for e in errors:

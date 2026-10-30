@@ -1,6 +1,6 @@
 {
   "name": "wiring-guide",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Explain wiring, breadboard placement, soldering and multimeter probing with illustrated pages instead of walls of text, and keep a progress index of every page.",
   "author": { "name": "Shunya Koide", "url": "https://github.com/shunyakoide" },
   "license": "MIT"
