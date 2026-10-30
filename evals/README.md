@@ -4,7 +4,7 @@ What each item below proves, and what it does not. A result only counts for the 
 
 | What we want | Unit tests (no cost) | Model evals (`claude plugin eval`, costs money) | Still needs a person |
 |---|---|---|---|
-| 1. Wiring is correct | The drawn SVG's holes rebuild the same nets as `connect`; bad holes, pins and legs stop | `accuracy-*`: a model reads the request and writes the right connections | That facts in a spec match a real datasheet, and a real build works |
+| 1. Wiring is correct | The drawn SVG's holes rebuild the same nets as `connect`; bad holes, pins and legs stop | `accuracy-*`: nothing the answer states is wrong, and the page names the pins and parts. It does not trace the page's connections | That facts in a spec match a real datasheet, and a real build works |
 | 2. Hazards are found | Every rule in the script, in `tests/` | `hazard-*`: hazards needing a datasheet or judgment | Hazards in no case here. No result here proves a circuit safe |
 | 3. Page is easy to read | Text size, wire badge overlap, step, table and theme structure only | None: the judge does not see the page | The sheet below |
 | 4. No needless questions | None | `questions-*` | Borderline answers: read the transcript |

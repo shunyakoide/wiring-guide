@@ -16,7 +16,7 @@ A wrong voltage, polarity or pin can destroy a part or overheat it. These rules 
 - **If you cannot confirm one, do not finish that wiring.** Ask one specific question, or draw only the part you could confirm and say what is left out.
 - **Assume freely what cannot damage anything** (LED color, wire color, which free pin to use) and list it in chat. Do not ask about these.
 - **Never draw a dangerous circuit as if it were fine**, even when asked to. Say what would break and give the fix. To show wiring the user already built, use `as_built`.
-- **State the limits.** In chat, say what the script checked, what you read in which datasheet, and what nobody checked. Do not call a circuit safe or verified beyond that.
+- **State the limits.** In chat, say what the script checked, what you read in which datasheet, and what nobody checked: repeat the items in the script's `not checked` line that apply, without explaining them away. Do not call a circuit safe or verified beyond that.
 
 | The script stops the page (`ERROR:`) | The script warns (`warning:`): resolve it or tell the user | Only you can check |
 |---|---|---|
